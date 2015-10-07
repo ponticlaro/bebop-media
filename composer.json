@@ -14,7 +14,6 @@
     "ponticlaro/bebop-mvc": "dev-master",
     "ponticlaro/bebop-http-api": "dev-master",
     "ponticlaro/bebop-scripts-loader": "dev-master",
-    "ponticlaro/aws-transcoder": "dev-library-encode",
     "respect/validation": "~0.9",
     "slim/slim": "~2",
     "league/flysystem": "~1",
@@ -26,6 +25,9 @@
     "psr-4": {
       "Ponticlaro\\Bebop\\Media\\": "lib/"
     }
+  },
+  "suggest": {
+    "ponticlaro/aws-transcoder": "Allows usage of AWS Elastic Transcoder to optimize video uploads"
   },
   "minimum-stability": "dev"
 }
