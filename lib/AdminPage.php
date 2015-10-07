@@ -90,7 +90,7 @@ class AdminPage {
 
         <br><br>
         <label>Secret</label><br>
-        <input type="text" class="regular-text" name="<?php echo Config::MAIN_CONFIG_OPTION_KEY ?>[storage][s3][secret]" value="<?php echo $s3_secret; ?>" <?php if ($config->hasEnv('storage.s3.secret')) echo 'disabled="disabled"' ?>>
+        <input type="password" class="regular-text" name="<?php echo Config::MAIN_CONFIG_OPTION_KEY ?>[storage][s3][secret]" value="<?php echo $s3_secret; ?>" <?php if ($config->hasEnv('storage.s3.secret')) echo 'disabled="disabled"' ?>>
 
         <br><br>
         <label>Region</label><br>
