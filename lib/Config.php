@@ -9,12 +9,12 @@ class Config {
   /**
    * Plugin title
    */
-  const PLUGIN_TITLE = 'Bebop Media';
+  const PLUGIN_TITLE = 'Ponticlaro Media';
 
   /**
    * Admin page main heading
    */
-  const ADMIN_PAGE_MAIN_TITLE = 'Bebop Media Settings';
+  const ADMIN_PAGE_MAIN_TITLE = 'Ponticlaro Media';
 
   /**
    * Plugin configuration version
