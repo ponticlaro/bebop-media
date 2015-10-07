@@ -1,0 +1,45 @@
+<# var itemClass, message, buttonText, buttonAttrs;
+
+if (url && preset_mismatch) {
+    itemClass   = 'is-mismatch';
+    message     = 'Preset have changed';
+    buttonText  = 'Update';
+}
+
+else if(url) {
+    itemClass   = 'is-ok';
+    message     = width +' X '+ height;
+    buttonText  = 'Regenerate';
+}
+
+else if (can_generate) {
+    itemClass  = 'is-missing';
+    message    = 'Size does not exist';
+    buttonText = 'Generate';
+}
+
+if (!can_generate) {
+    itemClass   = 'is-impossible';
+    message     = 'Original image is too small';
+    buttonText  = 'Can\'t Generate';
+    buttonAttrs = 'disable="disabled"';
+} #>
+
+<div bebop-media-manage-attachment--list-item class="{{ itemClass }}">
+
+    <div class="bebop-media-manage-attachment--size-name">
+        <# if (url) { #>
+            <a target="_blank" href="{{ url }}">
+        <# } #>
+
+        {{ name }}
+
+        <# if (url) { #>
+            </a>
+        <# } #>
+    </div>
+
+    <div bebop-media-manage-attachment--actions>
+        <button <# if (can_generate) { #> bebop-media-manage-attachment--action="generate:size" bebop-media-param--id="{{ id }}" bebop-media-param--size="{{ name }}" <# } #> class="button" {{ buttonAttrs }}>{{ buttonText }}</button>
+    </div>
+</div>
