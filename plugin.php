@@ -3,7 +3,7 @@
 /*
 Plugin Name: Ponticlaro Media
 Plugin URI:
-Description: Cloud Media Manager
+Description: WordPress Plugin to manage media in the cloud
 Version: 1.0.0
 Author: Ponticlaro
 Author URI: http://ponticlaro.com
