@@ -134,7 +134,7 @@ class AdminPage {
       <input type="checkbox" name="<?php echo Config::CDN_CONFIG_OPTION_KEY; ?>[enabled]" value="1" <?php if($enabled) echo 'checked="checked"'; ?> <?php if ($config->hasEnv('cdn.enabled')) echo 'disabled="disabled"' ?>>
       <label for="">Enabled</label>
       <br>
-      <span class="description">Check this to enabled CDN URLs</span>
+      <span class="description">Check this to enable CDN URLs</span>
 
       <br><br>
       <label>Domain</label><br>
