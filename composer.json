@@ -9,6 +9,7 @@
     }
   ],
   "require": {
+    "ext-gd": "*",
     "composer/installers": "~1.0",
     "ponticlaro/bebop-cms": "dev-master",
     "ponticlaro/bebop-mvc": "dev-master",

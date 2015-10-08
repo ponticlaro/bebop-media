@@ -4,20 +4,20 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "8572f8b96dbbd6a90f118249045429a4",
+    "hash": "e181043a3e0707c9cb2aaa60189a074b",
     "packages": [
         {
             "name": "aws/aws-sdk-php",
-            "version": "3.6.0",
+            "version": "3.7.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/aws/aws-sdk-php.git",
-                "reference": "17cfc6300afcefc6eee3cc3a18531ba263d46e15"
+                "reference": "4cd2d5cccc0bf7be331b01008ae564f8cbc49e6f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/17cfc6300afcefc6eee3cc3a18531ba263d46e15",
-                "reference": "17cfc6300afcefc6eee3cc3a18531ba263d46e15",
+                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/4cd2d5cccc0bf7be331b01008ae564f8cbc49e6f",
+                "reference": "4cd2d5cccc0bf7be331b01008ae564f8cbc49e6f",
                 "shasum": ""
             },
             "require": {
@@ -80,7 +80,7 @@
                 "s3",
                 "sdk"
             ],
-            "time": "2015-10-06 21:18:50"
+            "time": "2015-10-07 17:09:53"
         },
         {
             "name": "composer/installers",
@@ -1080,6 +1080,8 @@
     },
     "prefer-stable": false,
     "prefer-lowest": false,
-    "platform": [],
+    "platform": {
+        "ext-gd": "*"
+    },
     "platform-dev": []
 }
