@@ -72,8 +72,8 @@ class MediaEncoder {
             ];
 
             $cdn_enabled        = $config->get('cdn.enabled') && $config->get('cdn.domain') ? true : false;
-            $replaced_string    = $cdn_enabled ? 's3://'. $config->get('storage.s3.bucket') : 's3://';
-            $replacement_string = $cdn_enabled ? $config->get('url_scheme') .'://'. $config->get('cdn.domain') : 'https://s3.amazonaws.com/';
+            $replaced_string    = $cdn_enabled ? 's3://'. $config->get('storage.s3.bucket') . ($config->get('storage.s3.prefix') ? '/'. $config->get('storage.s3.prefix') : '') : 's3://';
+            $replacement_string = $cdn_enabled ? $config->get('url_scheme') .'://'. $config->get('cdn.domain') . ($config->get('cdn.prefix') ? '/'. $config->get('cdn.prefix') : '') : 'https://s3.amazonaws.com/';
 
             // Collect MP4
             if(isset($this->urls['1080p']) && $this->urls['1080p']) {
