@@ -42,10 +42,10 @@ class HttpApi {
 
       $response = [];
       $query    = new \WP_Query([
-        'fields'       => 'ids',
-        'post_type'    => 'attachment',
-        'post_status'  => 'inherit',
-        'number_posts' => -1
+        'fields'      => 'ids',
+        'post_type'   => 'attachment',
+        'post_status' => 'inherit',
+        'numberposts' => -1
       ]);
 
       if ($query->posts) {
