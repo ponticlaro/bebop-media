@@ -235,7 +235,7 @@ class Image {
    */
   public function sizeExists($size)
   {
-    return array_key_exists($size, $this->wordpress_meta['sizes']);
+    return is_array($this->wordpress_meta['sizes']) ? array_key_exists($size, $this->wordpress_meta['sizes']) : false;
   }
 
   /**
