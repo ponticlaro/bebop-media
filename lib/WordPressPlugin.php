@@ -276,7 +276,8 @@ class WordPressPlugin {
                 $file_type = get_post_mime_type($post_id);
 
                 // If the file is a video, try to use the AWS Elastic Transcoder
-                if (strpos($file_type, 'video') !== false &&
+                if (class_exists('ponticlaro\encoding\Encoder') && 
+                    strpos($file_type, 'video') !== false &&
                     $config->get('elastic_transcoder.enabled') !== '' && 
                     is_readable(TEMPLATEPATH .'/'. trim($config->get('elastic_transcoder.config_file'), '/'))) {
 

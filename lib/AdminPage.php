@@ -27,7 +27,9 @@ class AdminPage {
 
     $this->__addMainConfigTab();
     $this->__addCdnConfigTab();
-    $this->__addAwsElasticTranscoderConfigTab();
+
+    if (class_exists('ponticlaro\encoding\Encoder'))
+      $this->__addAwsElasticTranscoderConfigTab();
   }
 
   /**
