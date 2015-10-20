@@ -325,7 +325,7 @@ class WordPressPlugin {
     {
       // Remove uploads base path so that we end up
       // with the "/YYYY/MM/filename.extension" format
-      $path = str_replace(Config::getInstance()->get('local.base_dir'), '', $file);
+      $path = str_replace(Config::getInstance()->get('local.base_dir'), '', Utils::getCleanS3Key($file));
 
       // Push local file to remote filesystem
       $fs = Filesystem::getInstance();

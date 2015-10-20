@@ -147,7 +147,7 @@ class Image {
       }
     }
 
-    return '/'. $url;
+    return '/'. Utils::getCleanS3Key($url);
   }
 
   /**
@@ -171,7 +171,7 @@ class Image {
       }
     }
 
-    return $url;
+    return Utils::getCleanS3Key($url);
   }
 
   /**
