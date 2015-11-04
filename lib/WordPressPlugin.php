@@ -118,13 +118,13 @@ class WordPressPlugin {
       add_filter('wp_delete_file', array($this, '__deleteRemoteFile'));
 
       // Handle pushing local files to remote filesystem
-      add_filter('po_bebop_media.push_file_to_remote', array($this, '__pushFileToRemote'), 1, 1);
+      add_action('po_bebop_media.push_file_to_remote', array($this, '__pushFileToRemote'), 1, 1);
 
       // Handle pulling remote files to local filesystem
-      add_filter('po_bebop_media.pull_file_to_local', array($this, '__pullFileToLocal'), 1, 1);
+      add_action('po_bebop_media.pull_file_to_local', array($this, '__pullFileToLocal'), 1, 1);
 
       // Handle deleting remote files
-      add_filter('po_bebop_media.delete_file_from_remote', array($this, '__deleteFileFromRemoteHook'), 1, 1);
+      add_action('po_bebop_media.delete_file_from_remote', array($this, '__deleteFileFromRemoteHook'), 1, 1);
     
       // Enable integrations with other WordPress plugins
       add_action('init', array($this, '__enablePluginIntegrations'));
