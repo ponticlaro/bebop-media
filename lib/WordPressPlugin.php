@@ -15,6 +15,26 @@ class WordPressPlugin {
     protected static $instance;
 
     /**
+     * Lists of available plugin integrations
+     * 
+     * @var array
+     */
+    protected static $plugin_integrations = [
+        'gravity_forms' => [
+            'name'  => 'Gravity Forms',
+            'path'  => 'gravity-forms/gravity-forms.php',
+            'class' => 'Ponticlaro\Bebop\Media\Integrations\GravityForms'
+        ]
+    ];
+
+    /**
+     * Lists of enabled plugin integrations
+     * 
+     * @var array
+     */
+    protected $enabled_plugin_integrations = [];
+
+    /**
      * Boots plugin
      *
      * @param  string $caller_file Absolute path a file inside the root directory of the plugin
@@ -102,6 +122,12 @@ class WordPressPlugin {
 
       // Handle pulling remote files to local filesystem
       add_filter('po_bebop_media.pull_file_to_local', array($this, '__pullFileToLocal'), 1, 1);
+
+      // Handle deleting remote files
+      add_filter('po_bebop_media.delete_file_from_remote', array($this, '__deleteFileFromRemoteHook'), 1, 1);
+    
+      // Enable integrations with other WordPress plugins
+      add_action('init', array($this, '__enablePluginIntegrations'));
     }
 
     /**
@@ -382,5 +408,32 @@ class WordPressPlugin {
         // We must return the absolute path,
         // otherwise the local file won't be deleted
         return $file;
+    }
+
+    /**
+     * Deletes a remote file
+     *
+     * @param  string $path Relative path to the file being deleted
+     * @return void
+     */
+    public function __deleteFileFromRemoteHook($path)
+    {
+        $fs = Filesystem::getInstance();
+
+        if ($fs->remoteHas($path))
+            $fs->deleteRemote($path);
+    }
+
+    /**
+     * Enables integrations with other WordPress plugins
+     * 
+     * @return void
+     */
+    public function __enablePluginIntegrations()
+    {
+        foreach (static::$plugin_integrations as $id => $plugin) {
+            
+            $this->enabled_plugin_integrations[$id] = call_user_func_array([new \ReflectionClass($plugin['class']), 'newInstance'], []);
+        }
     }
 }
