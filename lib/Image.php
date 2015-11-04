@@ -13,6 +13,26 @@ class Image {
   protected static $env;
 
   /**
+   * Holds all the status messages and code
+   * 
+   * @var array
+   */
+  protected static $status_messages = [
+    'ok' => [
+      'code'    => 'ok',
+      'message' => 'All the thumbnails have been generated'
+    ],
+    'warning' => [
+      'code'    => 'warning',
+      'message' => 'Some thumbnails might be missing or not matching its size preset'
+    ],
+    'severe' => [
+      'code'    => 'severe',
+      'message' => 'No thumbnails have been generated'
+    ]
+  ];
+
+  /**
    * Contains the attachment ID
    *
    * @var int
@@ -413,13 +433,45 @@ class Image {
     else {
 
       $presets = $this->getAllSizePresets();
-      $data    = ['sizes' => []];
+      $data    = [
+        'code'    => static::$status_messages['ok']['code'],
+        'message' => static::$status_messages['ok']['message'],
+        'sizes'   => []
+      ];
+
+      $existing_thumbnails      = 0;
+      $missing_or_update_needed = 0;
 
       // Sort alphabetically
       ksort($presets);
 
       foreach ($presets as $size => $size_data) {
-        $data['sizes'][$size] = $this->__getSizeStatus($size);
+        
+        $size_data = $this->__getSizeStatus($size);
+
+        if ($size_data['url'] && !$size_data['preset_mismatch']) {
+          $existing_thumbnails++;
+        }
+
+        elseif ($size_data['url'] && $size_data['preset_mismatch']) {
+          $missing_or_update_needed++;
+        }
+
+        elseif (!$size_data['url'] && $size_data['can_generate']) {
+          $missing_or_update_needed++;
+        }
+
+        $data['sizes'][$size] = $size_data;
+      }
+
+      if (!$existing_thumbnails) {
+        $data['code']    = static::$status_messages['severe']['code'];
+        $data['message'] = static::$status_messages['severe']['message'];
+      }
+
+      elseif ($missing_or_update_needed) {
+        $data['code']    = static::$status_messages['warning']['code'];
+        $data['message'] = static::$status_messages['warning']['message'];
       }
 
       return $data;

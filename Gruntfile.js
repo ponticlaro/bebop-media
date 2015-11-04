@@ -20,12 +20,15 @@ module.exports = function(grunt) {
     },
     jshint: {
       all: [
+        '<%= meta.js_path %>/modules/',
         '<%= meta.js_path %>/bebop-media.js'
       ]
     },
     concat: {
       main: {
         src: [
+          '<%= meta.js_path %>/vendor/spin.js',
+          '<%= meta.js_path %>/modules/regenerate-button.js',
           '<%= meta.js_path %>/bebop-media.js'
         ],
         dest: '<%= meta.js_path %>/bebop-media.min.js'

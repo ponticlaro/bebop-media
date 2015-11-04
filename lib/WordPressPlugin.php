@@ -102,6 +102,9 @@ class WordPressPlugin {
 
       // Handle pulling remote files to local filesystem
       add_filter('po_bebop_media.pull_file_to_local', array($this, '__pullFileToLocal'), 1, 1);
+      
+      // Adds Media Library List View column
+      add_action('admin_init', [$this, '__addMediaLibraryListViewColumn']);
     }
 
     /**
@@ -172,18 +175,32 @@ class WordPressPlugin {
       // Register JS
       $js = Js::getInstance();
 
+      // Base JS dependencies
       $js_dependencies = [
           'jquery',
           'backbone',
           'underscore'
       ];
 
-      // Check if development environment is enabled and get correct file name to load
-      $main_js_name = $config->get('dev_env_enabled') ? 'bebop-media.js' : 'bebop-media.min.js';
+       // Check if development environment is enabled and load dev scripts
+      if ($config->get('dev_env_enabled')) {
+          
+          // Add development dependencies
+          $js_dependencies[] = 'bebop-media--regenerate-button';
 
-      $js->getHook('back')
-         ->register('bebop-media', $config->get('plugin_base_url') .'assets/js/'. $main_js_name, $js_dependencies)
-         ->enqueue('bebop-media');
+          $js->getHook('back')
+             ->register('bebop-media--spin', $config->get('plugin_base_url') .'assets/js/vendor/spin.js')
+             ->register('bebop-media--regenerate-button', $config->get('plugin_base_url') .'assets/js/modules/regenerate-button.js', ['bebop-media--spin'])
+             ->register('bebop-media', $config->get('plugin_base_url') .'assets/js/bebop-media.js', $js_dependencies)
+             ->enqueue('bebop-media');
+      }
+
+      else {
+
+        $js->getHook('back')
+           ->register('bebop-media', $config->get('plugin_base_url') .'assets/js/bebop-media.min.js', $js_dependencies)
+           ->enqueue('bebop-media');
+      }
 
       // Register CSS
       $css = Css::getInstance();
@@ -199,21 +216,13 @@ class WordPressPlugin {
      */
     public function __renderJavascriptTemplates()
     {
-      // Override WordPress built-in action that renders javascript templates
-      add_action('in_admin_footer', function() {
-          if (has_action('admin_footer', 'wp_print_media_templates')) {
-              remove_action('admin_footer', 'wp_print_media_templates');
-              add_action('admin_footer', [$this, '__modifyWordpressMediaTemplates']);
-          }
-      });
-
       // Add plugin templates
       add_action('admin_footer', function() { ?>
 
-        <div id="bebop-media-config" bebop-media-api-url="<?php echo Config::HTTP_API_BASE_URL; ?>"></div>
+        <div id="bebop-media-config" bebop-media--api-url="<?php echo Config::HTTP_API_BASE_URL; ?>"></div>
 
-        <script bebop-media-edit-attachment-template="list-item" type="text/template" style="display:none">
-            <?php echo str_replace(['<#', '#>', '{{', '}}'], ['<%', '%>', '<%-', '%>'], file_get_contents(Config::getInstance()->get('plugin_base_path') .'templates/attachment-editor/item.html')); ?>
+        <script bebop-media-regenerate-button-template="main" type="text/template" style="display:none">
+            <?php echo file_get_contents(Config::getInstance()->get('plugin_base_path') .'templates/regenerate-button.html'); ?>
         </script>
 
       <?php });
@@ -382,5 +391,33 @@ class WordPressPlugin {
         // We must return the absolute path,
         // otherwise the local file won't be deleted
         return $file;
+    }
+
+    /**
+     * Adds Media Library List View column
+     * https://codex.wordpress.org/Media_Library_Screen#Media_Library_List_View
+     * 
+     * @return void
+     */
+    public function __addMediaLibraryListViewColumn() 
+    {
+        // Register column
+        add_filter('manage_media_columns', function($columns) {
+
+            $columns['thumbnails'] = 'Thumbnails';
+
+            return $columns;
+        });
+
+        // Displays column content
+        add_action('manage_media_custom_column', function($column, $post_id) {
+
+            if ($column == 'thumbnails') {
+              
+                $button = new RegenerateButton($post_id);
+                $button->setlayout('compact')->render();
+            }
+
+        }, 10, 2);
     }
 }

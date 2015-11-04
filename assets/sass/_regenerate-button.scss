@@ -1,0 +1,46 @@
+[bebop-media-regenerate-button--wrapper] {
+	
+}
+
+[bebop-media-regenerate-button] {
+	background-color: $white;
+	border: 2px solid $grey; 
+
+	&.status-is-ok {
+		border-color: $notification_green;
+	}
+
+	&.status-is-warning {
+		border-color: $notification_orange;
+	}
+
+	&.status-is-severe {
+		border-color: $notification_red;
+	}
+
+	&.hide-message {
+		[bebop-media-regenerate-button--message] {
+			display:none;
+		}
+	}
+
+	&.size-is-default {
+		
+	}
+
+	&.regeneration-success {
+
+	}
+
+	&.regeneration-failure {
+
+	}
+}
+
+[bebop-media-regenerate-button--icon] {
+	background-color: $grey_l;
+}
+
+[bebop-media-regenerate-button--message] {
+
+}
