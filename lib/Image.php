@@ -355,29 +355,29 @@ class Image {
       $this->getSizePresetHeight($size),
       $this->getSizePresetCrop($size));
 
-    if (!$result)
-      throw new \Exception('Failed to generate image size');
+    if ($result) {
 
-    $this->__updateWordpressMeta([
-      $size => $result
-    ]);
+      $this->__updateWordpressMeta([
+        $size => $result
+      ]);
 
-    $this->__updatePluginMeta([
-      $size => $result
-    ]);
+      $this->__updatePluginMeta([
+        $size => $result
+      ]);
 
-    // Send new local file to remote filesystem
-    do_action('po_bebop_media.push_file_to_remote', $this->getPartialPath($size));
+      // Send new local file to remote filesystem
+      do_action('po_bebop_media.push_file_to_remote', $this->getPartialPath($size));
 
-    // Delete local and remote file for the target size,
-    // but only if the new path is different from the old one
-    if ($old_absolute_path != $this->getAbsolutePath($size))
-      apply_filters('wp_delete_file', $old_absolute_path);
+      // Delete local and remote file for the target size,
+      // but only if the new path is different from the old one
+      if ($old_absolute_path != $this->getAbsolutePath($size))
+        apply_filters('wp_delete_file', $old_absolute_path);
 
-    // Using the 'wp_delete_file' hook should be enough,
-    // but currently it is not deleting the local file
-    if ($old_absolute_path != $this->getAbsolutePath($size) && file_exists($old_absolute_path))
-      unlink($old_absolute_path);
+      // Using the 'wp_delete_file' hook should be enough,
+      // but currently it is not deleting the local file
+      if ($old_absolute_path != $this->getAbsolutePath($size) && file_exists($old_absolute_path))
+        unlink($old_absolute_path);
+    }
 
     return $this->getStatus($size);
   }
