@@ -80,7 +80,13 @@ class GravityForms {
         $config          = Config::getInstance();
         $local_base_url  = $config->get('local.base_url');
         $remote_base_url = $config->getMediaBaseUrl();
-        $value           = str_replace($local_base_url, $remote_base_url, $value);
+        $file_url        = isset($entry[$field->id]) && $entry[$field->id] ? $entry[$field->id] : null;
+        
+        if ($file_url) {
+
+            $file_url = str_replace($local_base_url, $remote_base_url, $file_url);
+            $value    = preg_replace("/<a(.*)href='([^']*)'(.*)>/", '<a$1href="'. $file_url .'"$3>', $value);
+        }
 
         return $value;
     }
