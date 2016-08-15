@@ -16,6 +16,16 @@ class GravityForms {
         add_action('gform_after_submission', [$this, '__uploadFilesToRemote'], 10, 2);
         add_action('gform_entry_field_value', [$this, '__modifyLeadDetails'], 10, 4);
         add_action('gform_delete_lead', [$this, '__deleteFilesFromRemote'], 10, 1);
+
+        // Make file uploads name unique, pre-submission
+        add_action('gform_pre_submission', function() {
+          add_filter('sanitize_file_name', [$this, '__makeFilenameUnique'], 10);
+        });
+
+        // Make file uploads name unique, after-submission
+        add_action('gform_after_submission', function() {
+          remove_filter('sanitize_file_name', [$this, '__makeFilenameUnique']);
+        });
     }
 
     /**
@@ -113,5 +123,15 @@ class GravityForms {
             if ($field->type == 'fileupload' && isset($entry[$field->id]) && $entry[$field->id])
                 do_action('po_bebop_media.delete_file_from_remote', str_replace($local_base_url, '', $entry[$field->id]));
         }
+    }
+
+    /**
+     * Used to make sure files uploaded via gravity forms have unique names
+     * 
+     * @param  string $filename Original file name
+     * @return string           Filename with timestamp
+     */
+    function __makeFilenameUnique($filename) {
+        return date('U') .'-'. $filename;
     }
 }
