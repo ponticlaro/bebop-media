@@ -498,10 +498,14 @@ class Image {
 
     foreach ($all_sizes as $size) {
 
+      $builtin_size_width  = isset($_wp_additional_image_sizes[$size]) ? $_wp_additional_image_sizes[$size]['width'] : null;
+      $builtin_size_height = isset($_wp_additional_image_sizes[$size]) ? $_wp_additional_image_sizes[$size]['height'] : null;
+      $builtin_size_crop   = isset($_wp_additional_image_sizes[$size]) ? $_wp_additional_image_sizes[$size]['crop'] : null;
+
       $presets_data[$size] = [
-        'width'  => in_array($size, $default_sizes) ? (int)get_option($size .'_size_w') : $_wp_additional_image_sizes[$size]['width'],
-        'height' => in_array($size, $default_sizes) ? (int)get_option($size .'_size_h') : $_wp_additional_image_sizes[$size]['height'],
-        'crop'   => in_array($size, $default_sizes) ? (bool)get_option($size .'_crop') : $_wp_additional_image_sizes[$size]['crop'],
+        'width'  => in_array($size, $default_sizes) ? (int)get_option($size .'_size_w') : $builtin_size_width,
+        'height' => in_array($size, $default_sizes) ? (int)get_option($size .'_size_h') : $builtin_size_height,
+        'crop'   => in_array($size, $default_sizes) ? (bool)get_option($size .'_crop') : $builtin_size_crop,
       ];
     }
 
