@@ -24,7 +24,7 @@ nbproject
 
 # Composer
 /vendor
-composer.lock
+/composer.lock
 
 # Node/NPM
 /node_modules
