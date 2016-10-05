@@ -31,82 +31,113 @@ class Filesystem {
    */
   protected function __construct()
   {
-    $config            = Config::getInstance();
-    $filesystems       = [];
-    $remote_filesystem = null;
+    $config   = Config::getInstance();
+    $provider = $config->get('storage.provider');
 
-    // Init local filesystem
-    $local_adapter     = new \League\Flysystem\Adapter\Local($config->get('local.base_dir'));
-    $local_filesystem  = new \League\Flysystem\Filesystem($local_adapter, [
-        'visibility' => \League\Flysystem\AdapterInterface::VISIBILITY_PUBLIC
+    if ($provider && $provider !== 'none') {
+
+      $filesystems = [
+        'local'  => null, 
+        'remote' => null
+      ];
+      
+      // Init local filesystem
+      $local_adapter     = new \League\Flysystem\Adapter\Local($config->get('local.base_dir'));
+      $local_filesystem  = new \League\Flysystem\Filesystem($local_adapter, [
+          'visibility' => \League\Flysystem\AdapterInterface::VISIBILITY_PUBLIC
+      ]);
+
+      if ($local_filesystem)
+        $filesystems['local'] = $local_filesystem;
+
+      switch ($provider) {
+
+        // Handle AWS S3 filesystem
+        case 'aws_s3':
+          $filesystems['remote'] = $this->__getAWSS3Filesystem();
+          break;
+        
+        // Handle Google Cloud Storage filesystem
+        case 'gcs':
+          $filesystems['remote'] = $this->__getGCSFilesystem();
+          break;
+      }
+
+      // Set filesystem manager
+      $this->filesystem = new MountManager($filesystems);
+    }
+  }
+
+  /**
+   * Returns AWS S3 filesystem
+   * 
+   * @return object AWS S3 filesystem
+   */
+  protected function __getAWSS3Filesystem()
+  {
+    $config = Config::getInstance();
+    $scheme = $config->get('url_scheme');
+    $key    = $config->get('storage.s3.key');
+    $secret = $config->get('storage.s3.secret');
+    $region = $config->get('storage.s3.region');
+    $bucket = $config->get('storage.s3.bucket');
+    $prefix = $config->get('storage.s3.prefix');
+    
+    if (!$scheme || !$key || !$secret || !$region || !$bucket)
+      return null;
+
+    // Init AWS S3 client
+    $client = S3Client::factory([
+      'credentials' => [
+        'key'    => $key,
+        'secret' => $secret,
+      ],
+      'region'  => $region,
+      'scheme'  => $scheme,
+      'version' => 'latest'
     ]);
 
-    if ($local_filesystem)
-      $filesystems['local'] = $local_filesystem;
+    // Init adapter
+    $adapter = new AwsS3Adapter($client, $bucket, $prefix);
 
-    // Handle S3 filesystem
-    if ('awss3' == $config->get('storage.provider')) {
+    // Return AWS S3 filesystem
+    return new FlyFilesystem($adapter, [
+      'visibility' => AdapterInterface::VISIBILITY_PUBLIC
+    ]);
+  }
 
-      $scheme = $config->get('url_scheme');
-      $key    = $config->get('storage.s3.key');
-      $secret = $config->get('storage.s3.secret');
-      $region = $config->get('storage.s3.region');
-      $bucket = $config->get('storage.s3.bucket');
-      $prefix = $config->get('storage.s3.prefix');
-      
-      if ($scheme && $key && $secret && region && $bucket) {
+  /**
+   * Returns Google Cloud Storage filesystem
+   * 
+   * @return object Google Cloud Storage
+   */
+  protected function __getGCSFilesystem()
+  {
+    $config      = Config::getInstance();
+    $project_id  = $config->get('storage.gcs.project_id');
+    $auth_json   = $config->get('storage.gcs.auth_json');
+    $bucket_name = $config->get('storage.gcs.bucket');
+    $prefix      = $config->get('storage.gcs.prefix');
 
-        // Init AWS S3 client
-        $client = S3Client::factory([
-          'credentials' => [
-            'key'    => $key,
-            'secret' => $secret,
-          ],
-          'region'  => $region,
-          'scheme'  => $scheme,
-          'version' => 'latest'
-        ]);
+    if (!$project_id || !$auth_json || !$bucket_name)
+      return null;
 
-        // Init adapter
-        $adapter = new AwsS3Adapter($client, $bucket, $prefix);
+    // Init Google Cloud Storage client
+    $client = new StorageClient([
+      'projectId' => $project_id,
+      'keyFile'   => json_decode($auth_json, true)
+    ]);
 
-        // Define AWS S3 as the remote filesystem
-        $filesystems['remote'] = new FlyFilesystem($adapter, [
-          'visibility' => AdapterInterface::VISIBILITY_PUBLIC
-        ]);
-      }
-    }
+    // Get bucket object
+    $bucket = $client->bucket($bucket_name);
 
-    // Handle Google Cloud Storage filesystem
-    elseif ('gcs' == $config->get('storage.provider')) {
+    // Init adapter
+    $adapter = new GoogleStorageAdapter($client, $bucket, $prefix);
 
-      $project_id  = $config->get('storage.gcs.project_id');
-      $bucket_name = $config->get('storage.gcs.bucket');
-      $auth_json   = $config->get('storage.gcs.auth_json');
-
-      if ($project_id && $bucket_name && $auth_json) {
-
-        // Init Google Cloud Storage client
-        $storageClient = new StorageClient([
-          'projectId' => $project_id,
-          'keyFile'   => json_decode($auth_json, true)
-        ]);
-
-        // Get bucket object
-        $bucket = $storageClient->bucket($bucket_name);
-
-        // Init adapter
-        $adapter = new GoogleStorageAdapter($storageClient, $bucket);
-
-        // Define GCS as the remote filesystem
-        $filesystems['remote'] = new FlyFilesystem($adapter, [
-          'visibility' => AdapterInterface::VISIBILITY_PUBLIC
-        ]);
-      }
-    }
-
-    // Set filesystem manager
-    $this->filesystem = new MountManager($filesystems);
+    // Return Google Cloud Storage filesystem
+    return new FlyFilesystem($adapter, [
+      'visibility' => AdapterInterface::VISIBILITY_PUBLIC
+    ]);
   }
 
   /**

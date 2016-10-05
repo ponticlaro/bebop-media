@@ -1,99 +1,120 @@
 ;(function(window, document, undefined, $, _, Backbone) {
 
-    var Ponticlaro = window.Ponticlaro = {};
+  var Ponticlaro = window.Ponticlaro = {};
 
-    var Bebop = window.Ponticlaro.Bebop = window.Ponticlaro.Bebop || {};
+  var Bebop = window.Ponticlaro.Bebop = window.Ponticlaro.Bebop || {};
 
-    var BebopMedia = Ponticlaro.Bebop.Media = (function() {
+  var BebopMedia = Ponticlaro.Bebop.Media = (function() {
 
-        return {
+    return {
 
-        };
-    })();
+    };
+  })();
 
-    var AttachmentEditor = BebopMedia.AttachmentEditor = (function() {
+  var AdminStorage = BebopMedia.AdminStorage = (function() {
+      
+    return {
 
-        var self, $body, api_url, templates, $currentTarget;
+      init: function() {
+        
+        var $selector = $('#bebop-media-storage-provider-selector');
 
-        return {
+        if ($selector.length > 0) {
 
-            init: function() {
+          $selector.on('change', function(event) {
 
-                self = this;
+            $('[bebop-media-storage-provider-settings-panel]').hide();
+            $('[bebop-media-storage-provider-settings-panel="'+ $(this).val() +'"]').show();
+          });
+        }
+      }
+    };
+  })();
 
-                if (!$body)
-                    $body = $('body');
+  var AttachmentEditor = BebopMedia.AttachmentEditor = (function() {
 
-                if (!api_url)
-                    api_url = '/'+ $body.find('#bebop-media-config').attr('bebop-media-api-url');
+    var self, $body, api_url, templates, $currentTarget;
 
-                if (!templates) {
-                    templates = {
-                        listItem: $body.find('[bebop-media-edit-attachment-template="list-item"]').html()
-                    };
-                }
+    return {
 
-                // Listen to all click events on the editor module
-                $body.on('click', '[bebop-media-manage-attachment--action]', function(event) {
+      init: function() {
 
-                    $currentTarget = $(event.target);
+        self = this;
 
-                    if ($currentTarget.attr('bebop-media-manage-attachment--action') == 'generate:size') {
-                        self.generateSize();
-                    }
+        if (!$body)
+          $body = $('body');
 
-                    else {
-                        self.cleanState();
-                    }
-                });
-            },
+        if (!api_url)
+          api_url = '/'+ $body.find('#bebop-media-config').attr('bebop-media-api-url');
 
-            generateSize: function() {
+        if (!templates) {
+          templates = {
+            listItem: $body.find('[bebop-media-edit-attachment-template="list-item"]').html()
+          };
+        }
 
-                var self         = this,
-                    $item        = $currentTarget.parents('[bebop-media-manage-attachment--list-item]').parent(),
-                    id           = $currentTarget.attr('bebop-media-param--id'),
-                    size         = $currentTarget.attr('bebop-media-param--size'),
-                    originalText = $currentTarget.text();
+        // Listen to all click events on the editor module
+        $body.on('click', '[bebop-media-manage-attachment--action]', function(event) {
 
-                // Modify button text
-                $currentTarget.text('Generating...');
+          $currentTarget = $(event.target);
 
-                $.ajax({
-                    url: api_url + id +'/generate/'+ size,
-                    type: 'POST',
-                    dataType: 'json',
-                    success: function(data) {
+          if ($currentTarget.attr('bebop-media-manage-attachment--action') == 'generate:size') {
+            self.generateSize();
+          }
 
-                        // Render template
-                        data.id = id;
-                        $item.html(_.template(templates.listItem, data));
+          else {
+            self.cleanState();
+          }
+        });
+      },
 
-                        // Provide feedback to user
-                        var newText = $currentTarget.text();
-                        $currentTarget.text('Done!').delay(5000).text(newText);
-                    },
-                    error: function(xhr) {
+      generateSize: function() {
 
-                        // Provide feedback to user
-                        $currentTarget.text('Error!').delay(5000).text(originalText);
-                    },
-                    complete: function() {
-                        self.cleanState();
-                    }
-                });
-            },
+        var self         = this,
+            $item        = $currentTarget.parents('[bebop-media-manage-attachment--list-item]').parent(),
+            id           = $currentTarget.attr('bebop-media-param--id'),
+            size         = $currentTarget.attr('bebop-media-param--size'),
+            originalText = $currentTarget.text();
 
-            cleanState: function() {
-                $currentTarget = null;
-            }
-        };
-    })();
+        // Modify button text
+        $currentTarget.text('Generating...');
 
-    // On DOM ready
-    $(function() {
+        $.ajax({
+          url: api_url + id +'/generate/'+ size,
+          type: 'POST',
+          dataType: 'json',
+          success: function(data) {
 
-        AttachmentEditor.init();
-    });
+            // Render template
+            data.id = id;
+            $item.html(_.template(templates.listItem, data));
+
+            // Provide feedback to user
+            var newText = $currentTarget.text();
+            $currentTarget.text('Done!').delay(5000).text(newText);
+          },
+          error: function(xhr) {
+
+            // Provide feedback to user
+            $currentTarget.text('Error!').delay(5000).text(originalText);
+          },
+          complete: function() {
+            self.cleanState();
+          }
+        });
+      },
+
+      cleanState: function() {
+        $currentTarget = null;
+      }
+    };
+  })();
+
+  // On DOM ready
+  $(function() {
+
+    AdminStorage.init();
+    AttachmentEditor.init();
+  });
 
 })(window, document, undefined, jQuery, _, Backbone);

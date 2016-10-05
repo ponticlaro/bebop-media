@@ -148,7 +148,7 @@ class Image {
       }
     }
 
-    if ('awss3' == $config->get('storage.provider'))
+    if ('aws_s3' == $config->get('storage.provider'))
       $url = Utils::getCleanAWSS3Key($url);
 
     return '/'. $url;
@@ -176,7 +176,7 @@ class Image {
       }
     }
 
-    if ('awss3' == $config->get('storage.provider'))
+    if ('aws_s3' == $config->get('storage.provider'))
       $url = Utils::getCleanAWSS3Key($url);
 
     return $url;

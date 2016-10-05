@@ -32,6 +32,11 @@ class Config {
   const MAIN_CONFIG_OPTION_KEY = 'po_bebop_media_main';
 
   /**
+   * Key for wordpress option that contains the storage plugin configuration
+   */
+  const STORAGE_CONFIG_OPTION_KEY = 'po_bebop_media_storage';
+
+  /**
    * Key for wordpress option that contains the CDN plugin configuration
    */
   const CDN_CONFIG_OPTION_KEY = 'po_bebop_media_cdn';
@@ -117,6 +122,7 @@ class Config {
     // Initialize configuration object
     $this->data = new Collection(array_merge(
         get_option(static::MAIN_CONFIG_OPTION_KEY) ?: [],
+        ['storage'            => get_option(static::STORAGE_CONFIG_OPTION_KEY) ?: []],
         ['cdn'                => get_option(static::CDN_CONFIG_OPTION_KEY) ?: []],
         ['elastic_transcoder' => get_option(static::ELASTIC_TRANSCODER_CONFIG_OPTION_KEY) ?: []]
     ));

@@ -6,6 +6,10 @@
     {
       "type": "vcs",
       "url": "git@github.com:ponticlaro/ponticlaro-aws.git"
+    },
+    {
+      "type": "vcs",
+      "url":  "https://github.com/cristianobaptista/flysystem-google-cloud-storage"
     }
   ],
   "require": {
@@ -13,13 +17,14 @@
     "composer/installers": "~1.0",
     "ponticlaro/bebop-cms": "dev-master",
     "ponticlaro/bebop-mvc": "dev-master",
+    "ponticlaro/bebop-ui": "dev-master",
     "ponticlaro/bebop-http-api": "dev-master",
     "ponticlaro/bebop-scripts-loader": "dev-master",
     "respect/validation": "~0.9",
     "slim/slim": "~2",
     "league/flysystem": "~1",
     "league/flysystem-aws-s3-v3": "^1",
-    "superbalist/flysystem-google-storage": "^3",
+    "superbalist/flysystem-google-storage": "dev-master",
     "symfony/dom-crawler": "^2.7",
     "symfony/css-selector": "^2.7"
   },

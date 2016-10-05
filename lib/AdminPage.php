@@ -2,6 +2,8 @@
 
 namespace Ponticlaro\Bebop\Media;
 
+use Ponticlaro\Bebop\UI\Module as UIModule;
+
 class AdminPage {
 
   /**
@@ -23,11 +25,15 @@ class AdminPage {
    */
   protected function __construct()
   {
+    // Init admin page
     $this->admin_page = new \Ponticlaro\Bebop\Cms\AdminPage(Config::ADMIN_PAGE_MAIN_TITLE);
 
+    // Adde admin page tabs
     $this->__addMainConfigTab();
+    $this->__addStorageConfigTab();
     $this->__addCdnConfigTab();
 
+    // Conditionally add the AWS Elastic Transcoder admin tab
     if (class_exists('ponticlaro\encoding\Encoder'))
       $this->__addAwsElasticTranscoderConfigTab();
   }
@@ -39,83 +45,277 @@ class AdminPage {
   {
     $this->admin_page->addTab('Main', function($data) {
 
-        $config             = Config::getInstance();
-        $enabled            = $config->get('enabled');
-        $current_url_scheme = $config->get('url_scheme') ?: 'http';
-        $s3_key             = $config->get('storage.s3.key');
-        $s3_secret          = $config->get('storage.s3.secret');
-        $s3_region          = $config->get('storage.s3.region') ?: 'us-east-1';
-        $s3_bucket          = $config->get('storage.s3.bucket');
-        $s3_prefix          = $config->get('storage.s3.prefix');
+      $config        = Config::getInstance();
+      $enabled_attrs = [];
+      $scheme_attrs  = [];
 
-        $url_scheme_options = [
-            'http',
-            'https'
+      if ($config->hasEnv('enabled'))
+        $enabled_attrs['disabled'] = 'disabled';
+
+      if ($config->hasEnv('url_scheme'))
+        $scheme_attrs['disabled'] = 'disabled';
+
+      UIModule::Checkbox([
+        'name'        => Config::MAIN_CONFIG_OPTION_KEY .'[enabled]',
+        'value'       => $config->get('enabled'),
+        'attrs'       => $enabled_attrs,
+        'description' => 'Check this to enable this plugin',
+        'options'     => [
+          [
+            'label' => 'Enabled',
+            'value' => '1'
+          ]
+        ]
+      ])->render();
+
+      UIModule::Select([
+        'label'   => 'URL Scheme',
+        'name'    => Config::MAIN_CONFIG_OPTION_KEY .'[url_scheme]',
+        'value'   => $config->get('url_scheme') ?: 'http',
+        'attrs'   => $scheme_attrs,
+        'options' => [
+          [
+            'label' => 'http',
+            'value' => 'http'
+          ],
+          [
+            'label' => 'https',
+            'value' => 'https'
+          ]
+        ]
+      ])->render();
+
+      UIModule::Button([
+        'text'  => 'Save',
+        'attrs' => [
+          'class' => 'button button-primary'
+        ]
+      ])->render();
+
+    });
+  }
+
+  /**
+   * Adds tab with configuration options for Storage
+   */
+  protected function __addStorageConfigTab()
+  {
+    $this->admin_page->addTab('Storage', function($data) { 
+
+      // Get configuration instance
+      $config = Config::getInstance();
+
+      $provider       = $config->get('storage.provider');
+      $provider_attrs = [
+        'id' => 'bebop-media-storage-provider-selector'
+      ];
+
+      if ($config->hasEnv('storage.provider'))
+        $provider_attrs['disabled'] = 'disabled';
+
+      UIModule::Select([
+        'label'   => 'Provider',
+        'name'    => Config::STORAGE_CONFIG_OPTION_KEY .'[provider]',
+        'value'   => $provider,
+        'attrs'   => $provider_attrs,
+        'options' => [
+          [
+            'label' => 'Select a provider',
+            'value' => 'none',
+          ],
+          [
+            'label' => 'AWS S3',
+            'value' => 'aws_s3',
+          ],
+          [
+            'label' => 'Google Cloud Storage',
+            'value' => 'gcs',
+          ]
+        ]
+      ])->render();
+
+      ?> 
+      
+      <div bebop-media-storage-provider-settings-panel="aws_s3" 
+           style="<?php if($provider !== 'aws_s3') echo 'display:none'; ?>">
+
+        <?php 
+
+        $s3_key_attrs = [];
+
+        if ($config->hasEnv('storage.s3.key'))
+          $s3_key_attrs['disabled'] = 'disabled';    
+
+        UIModule::Input([
+          'label' => 'AWS Key',
+          'name'  => Config::STORAGE_CONFIG_OPTION_KEY .'[s3][key]',
+          'value' => $config->get('storage.s3.key'),
+          'attrs' => $s3_key_attrs,
+        ])->render();
+
+        $s3_secret_attrs = [
+          'type' => 'password' 
         ];
 
-        $s3_region_options  = [
-            'us-east-1'      => 'US Standard (us-east-1)',
-            'us-west-1'      => 'US West - N. California (us-west-1)',
-            'us-west-2'      => 'US West - Oregon (us-west-2)',
-            'eu-east-1'      => 'EU - Ireland (eu-west-1)',
-            'eu-central-1'   => 'EU - Frankfurt (eu-central-1)',
-            'ap-southeast-1' => 'Asia Pacific - Singapore (ap-southeast-1)',
-            'ap-southeast-2' => 'Asia Pacific - Sydney (ap-southeast-2)',
-            'ap-northeast-1' => 'Asia Pacific - Tokyo (ap-northeast-1)',
-            'sa-east-1'      => 'South America - Sao Paulo (sa-east-1)',
-        ];
+        if ($config->hasEnv('storage.s3.secret'))
+          $s3_secret_attrs['disabled'] = 'disabled';    
+
+        UIModule::Input([
+          'label' => 'AWS Secret',
+          'name'  => Config::STORAGE_CONFIG_OPTION_KEY .'[s3][secret]',
+          'value' => $config->get('storage.s3.secret'),
+          'attrs' => $s3_secret_attrs,
+        ])->render();
+
+        $s3_region_attrs = [];
+
+        if ($config->hasEnv('storage.s3.region'))
+          $s3_region_attrs['disabled'] = 'disabled';    
+
+        UIModule::Select([
+          'label'   => 'AWS Region',
+          'name'    => Config::STORAGE_CONFIG_OPTION_KEY .'[s3][region]',
+          'value'   => $config->get('storage.s3.region'),
+          'attrs'   => $s3_region_attrs,
+          'options' => [
+            [
+              'label' => 'US Standard (us-east-1)',
+              'value' => 'us-east-1',
+            ],
+            [
+              'label' => 'US West - N. California (us-west-1)',
+              'value' => 'us-west-1',
+            ],
+            [
+              'label' => 'US West - Oregon (us-west-2)',
+              'value' => 'us-west-2',
+            ],
+            [
+              'label' => 'EU - Ireland (eu-west-1)',
+              'value' => 'eu-east-1',
+            ],
+            [
+              'label' => 'EU - Frankfurt (eu-central-1)',
+              'value' => 'eu-central-1',
+            ],
+            [
+              'label' => 'Asia Pacific - Singapore (ap-southeast-1)',
+              'value' => 'ap-southeast-1',
+            ],
+            [
+              'label' => 'Asia Pacific - Sydney (ap-southeast-2)',
+              'value' => 'ap-southeast-2',
+            ],
+            [
+              'label' => 'Asia Pacific - Tokyo (ap-northeast-1)',
+              'value' => 'ap-northeast-1',
+            ],
+            [
+              'label' => 'South America - Sao Paulo (sa-east-1)',
+              'value' => 'sa-east-1',
+            ],
+          ]
+        ])->render();
+
+        $s3_bucket_attrs = [];
+
+        if ($config->hasEnv('storage.s3.bucket'))
+          $s3_bucket_attrs['disabled'] = 'disabled'; 
+
+        UIModule::Input([
+          'label' => 'Bucket',
+          'name'  => Config::STORAGE_CONFIG_OPTION_KEY .'[s3][bucket]',
+          'value' => $config->get('storage.s3.bucket'),
+          'attrs' => $s3_bucket_attrs,
+        ])->render();
+
+        $s3_prefix_attrs = [];
+
+        if ($config->hasEnv('storage.s3.prefix'))
+          $s3_prefix_attrs['disabled'] = 'disabled'; 
+
+        UIModule::Input([
+          'label' => 'Prefix',
+          'name'  => Config::STORAGE_CONFIG_OPTION_KEY .'[s3][prefix]',
+          'value' => $config->get('storage.s3.prefix'),
+          'attrs' => $s3_prefix_attrs,
+        ])->render();
 
         ?>
 
-        <br><br>
-        <input type="checkbox" name="<?php echo Config::MAIN_CONFIG_OPTION_KEY ?>[enabled]" value="1" <?php if($enabled) echo 'checked="checked"'; ?> <?php if ($config->hasEnv('enabled')) echo 'disabled="disabled"' ?>>
-        <label for="">Enabled</label>
-        <br>
-        <span class="description">Check this to enabled this plugin</span>
-        <br><br>
+      </div>
+      
+      <div bebop-media-storage-provider-settings-panel="gcs" 
+           style="<?php if($provider !== 'gcs') echo 'display:none'; ?>">
 
-        <label>URL Scheme</label><br>
-        <select name="<?php echo Config::MAIN_CONFIG_OPTION_KEY ?>[url_scheme]" <?php if ($config->hasEnv('url_scheme')) echo 'disabled="disabled"' ?>>
-            <?php foreach ($url_scheme_options as $scheme) { ?>
-                <option <?php if ($scheme == $current_url_scheme) echo 'selected="selected"'; ?> value="<?php echo $scheme; ?>">
-                    <?php echo $scheme; ?>
-                </option>
-            <?php } ?>
-        </select>
-        <br><br>
+        <?php 
 
-        <h3>Storage</h3>
-        <h4>Amazon S3</h4>
+        $gcs_project_id_attrs = [];
 
-        <label>Key</label><br>
-        <input type="text" class="regular-text" name="<?php echo Config::MAIN_CONFIG_OPTION_KEY ?>[storage][s3][key]" value="<?php echo $s3_key; ?>" <?php if ($config->hasEnv('storage.s3.key')) echo 'disabled="disabled"' ?>>
+        if ($config->hasEnv('storage.gcs.project_id'))
+          $gcs_project_id_attrs['disabled'] = 'disabled'; 
 
-        <br><br>
-        <label>Secret</label><br>
-        <input type="password" class="regular-text" name="<?php echo Config::MAIN_CONFIG_OPTION_KEY ?>[storage][s3][secret]" value="<?php echo $s3_secret; ?>" <?php if ($config->hasEnv('storage.s3.secret')) echo 'disabled="disabled"' ?>>
+        UIModule::Input([
+          'label' => 'Project ID',
+          'name'  => Config::STORAGE_CONFIG_OPTION_KEY .'[gcs][project_id]',
+          'value' => $config->get('storage.gcs.project_id'),
+          'attrs' => $gcs_project_id_attrs,
+        ])->render();
 
-        <br><br>
-        <label>Region</label><br>
-        <select class="regular-text" name="<?php echo Config::MAIN_CONFIG_OPTION_KEY ?>[storage][s3][region]" <?php if ($config->hasEnv('storage.s3.region')) echo 'disabled="disabled"' ?>>
-            <?php foreach ($s3_region_options as $value => $label) { ?>
-                <option <?php if ($value == $s3_region) echo 'selected="selected"'; ?> value="<?php echo $value; ?>">
-                    <?php echo $label; ?>
-                </option>
-            <?php } ?>
-        </select>
+        $gcs_bucket_attrs = [];
 
-        <br><br>
-        <label>Bucket</label><br>
-        <input type="text" class="regular-text" name="<?php echo Config::MAIN_CONFIG_OPTION_KEY ?>[storage][s3][bucket]" value="<?php echo $s3_bucket; ?>"  <?php if ($config->hasEnv('storage.s3.bucket')) echo 'disabled="disabled"' ?>>
+        if ($config->hasEnv('storage.gcs.bucket'))
+          $gcs_bucket_attrs['disabled'] = 'disabled'; 
 
-        <br><br>
-        <label>Prefix</label><br>
-        <input type="text" class="regular-text" name="<?php echo Config::MAIN_CONFIG_OPTION_KEY ?>[storage][s3][prefix]" value="<?php echo $s3_prefix; ?>" <?php if ($config->hasEnv('storage.s3.prefix')) echo 'disabled="disabled"' ?>>
+        UIModule::Input([
+          'label' => 'Bucket',
+          'name'  => Config::STORAGE_CONFIG_OPTION_KEY .'[gcs][bucket]',
+          'value' => $config->get('storage.gcs.bucket'),
+          'attrs' => $gcs_bucket_attrs,
+        ])->render();
 
-        <br><br>
-        <button class="button button-primary">Save</button>
+        $gcs_prefix_attrs = [];
 
-    <?php });
+        if ($config->hasEnv('storage.gcs.prefix'))
+          $gcs_prefix_attrs['disabled'] = 'disabled'; 
+
+        UIModule::Input([
+          'label' => 'Prefix',
+          'name'  => Config::STORAGE_CONFIG_OPTION_KEY .'[gcs][prefix]',
+          'value' => $config->get('storage.gcs.prefix'),
+          'attrs' => $gcs_prefix_attrs,
+        ])->render();
+
+        $gcs_auth_json_attrs = [
+          'rows' => 16
+        ];
+
+        if ($config->hasEnv('storage.gcs.auth_json'))
+          $gcs_auth_json_attrs['disabled'] = 'disabled'; 
+
+        UIModule::Textarea([
+          'label' => 'Authentication JSON',
+          'name'  => Config::STORAGE_CONFIG_OPTION_KEY .'[gcs][auth_json]',
+          'value' => $config->get('storage.gcs.auth_json'),
+          'attrs' => $gcs_auth_json_attrs,
+        ])->render();
+
+        ?>
+
+      </div>
+      
+      <br><br>
+
+      <?php 
+
+      UIModule::Button([
+        'text'  => 'Save',
+        'attrs' => [
+          'class' => 'button button-primary'
+        ]
+      ])->render();
+
+    });
   }
 
   /**
@@ -125,33 +325,56 @@ class AdminPage {
   {
     $this->admin_page->addTab('CDN', function($data) {
 
-      $config  = Config::getInstance();
-      $enabled = $config->get('cdn.enabled');
-      $domain  = $config->get('cdn.domain');
-      $prefix  = $config->get('cdn.prefix');
+      $config        = Config::getInstance();
+      $enabled_attrs = [];
+      $domain_attrs  = [];
+      $prefix_attrs  = [];
 
-      ?>
+      if ($config->hasEnv('cdn.enabled'))
+        $enabled_attrs['disabled'] = 'disabled';
 
-      <br>
-      <input type="checkbox" name="<?php echo Config::CDN_CONFIG_OPTION_KEY; ?>[enabled]" value="1" <?php if($enabled) echo 'checked="checked"'; ?> <?php if ($config->hasEnv('cdn.enabled')) echo 'disabled="disabled"' ?>>
-      <label for="">Enabled</label>
-      <br>
-      <span class="description">Check this to enable CDN URLs</span>
+      if ($config->hasEnv('cdn.domain'))
+        $domain_attrs['disabled'] = 'disabled';
 
-      <br><br>
-      <label>Domain</label><br>
-      <input type="text" class="regular-text" name="<?php echo Config::CDN_CONFIG_OPTION_KEY; ?>[domain]" value="<?php echo $domain; ?>" <?php if ($config->hasEnv('cdn.domain')) echo 'disabled="disabled"' ?>>
-      <br>
-      <span class="description">Do not add URL scheme (e.g. http:// or https://)</span>
+      if ($config->hasEnv('cdn.prefix'))
+        $prefix_attrs['disabled'] = 'disabled';
 
-      <br><br>
-      <label>Prefix</label><br>
-      <input type="text" class="regular-text" name="<?php echo Config::CDN_CONFIG_OPTION_KEY; ?>[prefix]" value="<?php echo $prefix; ?>" <?php if ($config->hasEnv('cdn.prefix')) echo 'disabled="disabled"' ?>>
+      UIModule::Checkbox([
+        'name'        => Config::CDN_CONFIG_OPTION_KEY .'[enabled]',
+        'value'       => $config->get('cdn.enabled'),
+        'attrs'       => $enabled_attrs,
+        'description' => 'Check this to enable CDN URLs',
+        'options'     => [
+          [
+            'label' => 'Enabled',
+            'value' => '1'
+          ]
+        ]
+      ])->render();
 
-      <br><br>
-      <button class="button button-primary">Save</button>
+      UIModule::Input([
+        'label'       => 'Domain',
+        'name'        => Config::CDN_CONFIG_OPTION_KEY .'[domain]',
+        'value'       => $config->get('cdn.domain'),
+        'attrs'       => $domain_attrs,
+        'description' => 'Do not add URL scheme (e.g. http:// or https://)',
+      ])->render();
 
-    <?php });
+      UIModule::Input([
+        'label'       => 'Prefix',
+        'name'        => Config::CDN_CONFIG_OPTION_KEY .'[prefix]',
+        'value'       => $config->get('cdn.prefix'),
+        'attrs'       => $prefix_attrs,
+      ])->render();
+
+      UIModule::Button([
+        'text'  => 'Save',
+        'attrs' => [
+          'class' => 'button button-primary'
+        ]
+      ])->render();
+
+    });
   }
 
   /**

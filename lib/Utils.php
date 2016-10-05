@@ -18,7 +18,7 @@ class Utils {
       return self::__getMediaCdnBaseUrl();
     }
 
-    elseif('awss3' == $config->get('storage.provider')) {
+    elseif('aws_s3' == $config->get('storage.provider')) {
       return self::__getMediaAWSS3BaseUrl();
     }
 
