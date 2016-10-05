@@ -69,19 +69,36 @@ class Config {
    * @var array
    */
   protected $env_config_map = [
-      'dev_env_enabled'                => 'PO_BEBOP_MEDIA__DEV_ENV_ENABLED',
-      'enabled'                        => 'PO_BEBOP_MEDIA__ENABLED',
-      'url_scheme'                     => 'PO_BEBOP_MEDIA__URL_SCHEME',
-      'storage.s3.key'                 => 'PO_BEBOP_MEDIA__STORAGE_S3_KEY',
-      'storage.s3.secret'              => 'PO_BEBOP_MEDIA__STORAGE_S3_SECRET',
-      'storage.s3.region'              => 'PO_BEBOP_MEDIA__STORAGE_S3_REGION',
-      'storage.s3.bucket'              => 'PO_BEBOP_MEDIA__STORAGE_S3_BUCKET',
-      'storage.s3.prefix'              => 'PO_BEBOP_MEDIA__STORAGE_S3_PREFIX',
-      'cdn.enabled'                    => 'PO_BEBOP_MEDIA__CDN_ENABLED',
-      'cdn.domain'                     => 'PO_BEBOP_MEDIA__CDN_DOMAIN',
-      'cdn.prefix'                     => 'PO_BEBOP_MEDIA__CDN_PREFIX',
-      'elastic_transcoder.enabled'     => 'PO_BEBOP_MEDIA__ELASTIC_TRANSCODER_ENABLED',
-      'elastic_transcoder.config_file' => 'PO_BEBOP_MEDIA__ELASTIC_TRANSCODER_CONFIG_FILE',
+
+    // Main
+    'dev_env_enabled' => 'PO_BEBOP_MEDIA__DEV_ENV_ENABLED',
+    'enabled'         => 'PO_BEBOP_MEDIA__ENABLED',
+    'url_scheme'      => 'PO_BEBOP_MEDIA__URL_SCHEME',
+
+    // Storage
+    'storage.provider' => 'PO_BEBOP_MEDIA__STORAGE_PROVIDER',
+
+    // Storage: AWS S3
+    'storage.s3.key'    => 'PO_BEBOP_MEDIA__STORAGE_S3_KEY',
+    'storage.s3.secret' => 'PO_BEBOP_MEDIA__STORAGE_S3_SECRET',
+    'storage.s3.region' => 'PO_BEBOP_MEDIA__STORAGE_S3_REGION',
+    'storage.s3.bucket' => 'PO_BEBOP_MEDIA__STORAGE_S3_BUCKET',
+    'storage.s3.prefix' => 'PO_BEBOP_MEDIA__STORAGE_S3_PREFIX',
+
+    // Storage: Google Cloud Storage
+    'storage.gcs.project_id' => 'PO_BEBOP_MEDIA__STORAGE_GCS_PROJECT_ID',
+    'storage.gcs.bucket'     => 'PO_BEBOP_MEDIA__STORAGE_GCS_BUCKET',
+    'storage.gcs.prefix'     => 'PO_BEBOP_MEDIA__STORAGE_GCS_PREFIX',
+    'storage.gcs.auth_json'  => 'PO_BEBOP_MEDIA__STORAGE_GCS_AUTH_JSON',
+
+    // CDN
+    'cdn.enabled' => 'PO_BEBOP_MEDIA__CDN_ENABLED',
+    'cdn.domain'  => 'PO_BEBOP_MEDIA__CDN_DOMAIN',
+    'cdn.prefix'  => 'PO_BEBOP_MEDIA__CDN_PREFIX',
+
+    // AWS Elastic Transcoder
+    'elastic_transcoder.enabled'     => 'PO_BEBOP_MEDIA__ELASTIC_TRANSCODER_ENABLED',
+    'elastic_transcoder.config_file' => 'PO_BEBOP_MEDIA__ELASTIC_TRANSCODER_CONFIG_FILE',
   ];
 
   /**
@@ -131,7 +148,7 @@ class Config {
    */
   public function get($key)
   {
-      return $this->hasEnv($key) ? $this->getEnv($key) : $this->data->get($key);
+    return $this->hasEnv($key) ? $this->getEnv($key) : $this->data->get($key);
   }
 
   /**
@@ -142,9 +159,9 @@ class Config {
    */
   public function set($key, $value)
   {
-      $this->data->set($key, $value);
+    $this->data->set($key, $value);
 
-      return $this;
+    return $this;
   }
 
   /**
@@ -155,7 +172,7 @@ class Config {
    */
   public function getEnv($key)
   {
-      return isset($this->env_config_map[$key]) && getenv($this->env_config_map[$key]) ? getenv($this->env_config_map[$key]) : null;
+    return isset($this->env_config_map[$key]) && getenv($this->env_config_map[$key]) ? getenv($this->env_config_map[$key]) : null;
   }
 
   /**
@@ -166,57 +183,6 @@ class Config {
    */
   public function hasEnv($key)
   {
-      return isset($this->env_config_map[$key]) && getenv($this->env_config_map[$key]) ? true : false;
-  }
-
-  /**
-   * Returns the correct base URL for
-   * attachments depending on the configuration
-   *
-   * @return string Attachments base URL
-   */
-  public function getMediaBaseUrl()
-  {
-      if ($this->get('cdn.enabled') && $this->get('cdn.domain')) {
-
-          return $this->getMediaCdnBaseUrl();
-      }
-
-      elseif($this->get('storage.s3.key') && $this->get('storage.s3.secret') && $this->get('storage.s3.bucket')) {
-
-          return $this->getMediaS3BaseUrl();
-      }
-
-      return $this->get('local.base_url');
-  }
-
-  /**
-   * Returns Amazon S3 base URL using the current configuration
-   *
-   * @return string Amazon S3 base URL
-   */
-  public function getMediaS3BaseUrl()
-  {
-      $url  = ($this->get('url_scheme') ?: 'http') .'://s3';
-      $url .= $this->get('storage.s3.region') != 'us-east-1' ? '.'. $this->get('storage.s3.region') : '';
-      $url .= '.amazonaws.com/';
-      $url .= $this->get('storage.s3.bucket');
-      $url .= $this->get('storage.s3.prefix') ? '/'. trim($this->get('storage.s3.prefix'), '/') : '';
-
-      return $url;
-  }
-
-  /**
-   * Returns CDN base URL using the current configuration
-   *
-   * @return string CDN URL
-   */
-  public function getMediaCdnBaseUrl()
-  {
-      $url  = ($this->get('url_scheme') ?: 'http') .'://';
-      $url .= $this->get('cdn.domain');
-      $url .= $this->get('cdn.prefix') ? '/'. trim($this->get('cdn.prefix'), '/') : '';
-
-      return $url;
+    return isset($this->env_config_map[$key]) && getenv($this->env_config_map[$key]) ? true : false;
   }
 }

@@ -134,7 +134,8 @@ class Image {
    */
   public function getRelativeURL($size = null)
   {
-    $url = $this->partial_path;
+    $config = Config::getInstance();
+    $url    = $this->partial_path;
 
     if ($size) {
 
@@ -147,7 +148,10 @@ class Image {
       }
     }
 
-    return '/'. Utils::getCleanS3Key($url);
+    if ('awss3' == $config->get('storage.provider'))
+      $url = Utils::getCleanAWSS3Key($url);
+
+    return '/'. $url;
   }
 
   /**
@@ -158,7 +162,8 @@ class Image {
    */
   public function getAbsoluteURL($size = null)
   {
-    $url = Config::getInstance()->getMediaBaseUrl() .'/'. $this->partial_path;
+    $config = Config::getInstance();
+    $url    = Utils::getMediaBaseUrl() .'/'. $this->partial_path;
 
     if ($size) {
 
@@ -171,7 +176,10 @@ class Image {
       }
     }
 
-    return Utils::getCleanS3Key($url);
+    if ('awss3' == $config->get('storage.provider'))
+      $url = Utils::getCleanAWSS3Key($url);
+
+    return $url;
   }
 
   /**

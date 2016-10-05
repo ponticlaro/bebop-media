@@ -62,7 +62,7 @@ class GravityForms {
      */
     public function __uploadFilesToRemote($entry, $form)
     {
-        $remote_base_url = Config::getInstance()->getMediaBaseUrl();;
+        $remote_base_url = Utils::getMediaBaseUrl();
 
         foreach ($form['fields'] as $field) {
 
@@ -89,7 +89,7 @@ class GravityForms {
 
         $config          = Config::getInstance();
         $local_base_url  = $config->get('local.base_url');
-        $remote_base_url = $config->getMediaBaseUrl();
+        $remote_base_url = Utils::getMediaBaseUrl();
         $file_url        = isset($entry[$field->id]) && $entry[$field->id] ? $entry[$field->id] : null;
         
         if ($file_url) {

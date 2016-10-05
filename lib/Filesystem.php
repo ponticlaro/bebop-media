@@ -2,6 +2,14 @@
 
 namespace Ponticlaro\Bebop\Media;
 
+use Aws\S3\S3Client;
+use League\Flysystem\AwsS3v3\AwsS3Adapter;
+use League\Flysystem\AdapterInterface;
+use League\Flysystem\Filesystem as FlyFilesystem;
+use League\Flysystem\MountManager;
+use Google\Cloud\Storage\StorageClient;
+use Superbalist\Flysystem\GoogleStorage\GoogleStorageAdapter;
+
 class Filesystem {
 
   /**
@@ -19,18 +27,13 @@ class Filesystem {
   protected $filesystem;
 
   /**
-   * ID of the default remote filesystem
-   *
-   * @var string
-   */
-  protected $default_remote_filesystem_id = 's3';
-
-  /**
    * Instantiates this class
    */
   protected function __construct()
   {
-    $config = Config::getInstance();
+    $config            = Config::getInstance();
+    $filesystems       = [];
+    $remote_filesystem = null;
 
     // Init local filesystem
     $local_adapter     = new \League\Flysystem\Adapter\Local($config->get('local.base_dir'));
@@ -38,37 +41,72 @@ class Filesystem {
         'visibility' => \League\Flysystem\AdapterInterface::VISIBILITY_PUBLIC
     ]);
 
-    // Init S3 filesystem
-    $s3_client = \Aws\S3\S3Client::factory([
-        'credentials' => [
-            'key'    => $config->get('storage.s3.key'),
-            'secret' => $config->get('storage.s3.secret'),
-        ],
-        'region'  => $config->get('storage.s3.region'),
-        'scheme'  => $config->get('url_scheme'),
-        'version' => 'latest'
-    ]);
+    if ($local_filesystem)
+      $filesystems['local'] = $local_filesystem;
 
-    $s3_adapter    = new \League\Flysystem\AwsS3v3\AwsS3Adapter($s3_client, $config->get('storage.s3.bucket'), $config->get('storage.s3.prefix'));
-    $s3_filesystem = new \League\Flysystem\Filesystem($s3_adapter, [
-        'visibility' => \League\Flysystem\AdapterInterface::VISIBILITY_PUBLIC
-    ]);
+    // Handle S3 filesystem
+    if ('awss3' == $config->get('storage.provider')) {
+
+      $scheme = $config->get('url_scheme');
+      $key    = $config->get('storage.s3.key');
+      $secret = $config->get('storage.s3.secret');
+      $region = $config->get('storage.s3.region');
+      $bucket = $config->get('storage.s3.bucket');
+      $prefix = $config->get('storage.s3.prefix');
+      
+      if ($scheme && $key && $secret && region && $bucket) {
+
+        // Init AWS S3 client
+        $client = S3Client::factory([
+          'credentials' => [
+            'key'    => $key,
+            'secret' => $secret,
+          ],
+          'region'  => $region,
+          'scheme'  => $scheme,
+          'version' => 'latest'
+        ]);
+
+        // Init adapter
+        $adapter = new AwsS3Adapter($client, $bucket, $prefix);
+
+        // Define AWS S3 as the remote filesystem
+        $filesystems['remote'] = new FlyFilesystem($adapter, [
+          'visibility' => AdapterInterface::VISIBILITY_PUBLIC
+        ]);
+      }
+    }
+
+    // Handle Google Cloud Storage filesystem
+    elseif ('gcs' == $config->get('storage.provider')) {
+
+      $project_id  = $config->get('storage.gcs.project_id');
+      $bucket_name = $config->get('storage.gcs.bucket');
+      $auth_json   = $config->get('storage.gcs.auth_json');
+
+      if ($project_id && $bucket_name && $auth_json) {
+
+        // Init Google Cloud Storage client
+        $storageClient = new StorageClient([
+          'projectId' => $project_id,
+          'keyFile'   => json_decode($auth_json, true)
+        ]);
+
+        // Get bucket object
+        $bucket = $storageClient->bucket($bucket_name);
+
+        // Init adapter
+        $adapter = new GoogleStorageAdapter($storageClient, $bucket);
+
+        // Define GCS as the remote filesystem
+        $filesystems['remote'] = new FlyFilesystem($adapter, [
+          'visibility' => AdapterInterface::VISIBILITY_PUBLIC
+        ]);
+      }
+    }
 
     // Set filesystem manager
-    $this->filesystem = new \League\Flysystem\MountManager([
-        'local' => $local_filesystem,
-        's3'    => $s3_filesystem
-    ]);
-  }
-
-  /**
-   * Sets the ID for the default remote filesystem
-   *
-   * @param string $filesystem_id ID of the remote filesystem to be set as default
-   */
-  public function setDefaultRemoteFilesystem($filesystem_id)
-  {
-    $this->default_remote_filesystem_id = $filesystem_id;
+    $this->filesystem = new MountManager($filesystems);
   }
 
   /**
@@ -90,7 +128,7 @@ class Filesystem {
    */
   public function remoteHas($path)
   {
-    return $this->filesystem->has($this->default_remote_filesystem_id .'://'. trim($path, '/'));
+    return $this->filesystem->has('remote://'. trim($path, '/'));
   }
 
   /**
@@ -115,7 +153,7 @@ class Filesystem {
    */
   public function pull($path)
   {
-    return $this->pullFrom($this->default_remote_filesystem_id, $path);
+    return $this->pullFrom('remote', $path);
   }
 
   /**
@@ -129,7 +167,7 @@ class Filesystem {
   {
     $content = $this->filesystem->read('local://'. trim($path, '/'));
 
-    return $this->filesystem->put($this->default_remote_filesystem_id .'://'. $path, $content);
+    return $this->filesystem->put($filesystem_id .'://'. $path, $content);
   }
 
   /**
@@ -140,7 +178,7 @@ class Filesystem {
    */
   public function push($path)
   {
-    return $this->pushTo($this->default_remote_filesystem_id, $path);
+    return $this->pushTo('remote', $path);
   }
 
   /**
@@ -174,7 +212,7 @@ class Filesystem {
    */
   public function deleteRemote($path)
   {
-    return $this->deleteFrom($this->default_remote_filesystem_id, $path);
+    return $this->deleteFrom('remote', $path);
   }
 
   /**
