@@ -154,7 +154,31 @@ class Config {
    */
   public function get($key)
   {
-    return $this->hasEnv($key) ? $this->getEnv($key) : $this->data->get($key);
+    $value = $this->hasEnv($key) ? $this->getEnv($key) : $this->data->get($key);
+
+    if (!$value) {
+      
+      // Fallback to AWS S3 as storage provider
+      if ($key == 'storage.provider' &&
+          $this->get('storage.s3.key') && 
+          $this->get('storage.s3.secret') &&
+          $this->get('storage.s3.region') &&
+          $this->get('storage.s3.bucket')) {
+        
+        $value = 'aws_s3';
+
+        if ($this->hasEnv('storage.s3.key') && 
+            $this->hasEnv('storage.s3.secret') && 
+            $this->hasEnv('storage.s3.region') && 
+            $this->hasEnv('storage.s3.bucket') && 
+            getenv('PO_BEBOP_MEDIA__STORAGE_PROVIDER') === false) {
+
+          putenv("PO_BEBOP_MEDIA__STORAGE_PROVIDER=$value");
+        }
+      }
+    }
+
+    return $value;
   }
 
   /**
