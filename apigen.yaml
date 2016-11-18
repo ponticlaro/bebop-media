@@ -1,0 +1,6 @@
+source:
+    - ./lib
+destination: ./docs
+templateTheme: bootstrap
+accessLevels: 
+    - public

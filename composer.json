@@ -11,11 +11,11 @@
   "require": {
     "ext-gd": "*",
     "composer/installers": "~1.0",
-    "ponticlaro/bebop-cms": "dev-master",
-    "ponticlaro/bebop-mvc": "dev-master",
-    "ponticlaro/bebop-ui": "dev-master",
-    "ponticlaro/bebop-http-api": "dev-master",
-    "ponticlaro/bebop-scripts-loader": "dev-master",
+    "ponticlaro/bebop-cms": "^1",
+    "ponticlaro/bebop-mvc": "^1",
+    "ponticlaro/bebop-ui": "^1",
+    "ponticlaro/bebop-http-api": "^1",
+    "ponticlaro/bebop-scripts-loader": "^1",
     "respect/validation": "~0.9",
     "slim/slim": "~2",
     "league/flysystem": "~1",
@@ -24,13 +24,18 @@
     "symfony/dom-crawler": "^2.7",
     "symfony/css-selector": "^2.7"
   },
+  "require-dev": {
+    "apigen/apigen": "^4"
+  },
   "autoload": {
     "psr-4": {
       "Ponticlaro\\Bebop\\Media\\": "lib/"
     }
   },
+  "scripts": {
+    "generate-docs": "apigen generate --config ./apigen.yaml"
+  },
   "suggest": {
     "ponticlaro/aws-transcoder": "Allows usage of AWS Elastic Transcoder to optimize video uploads"
-  },
-  "minimum-stability": "dev"
+  }
 }

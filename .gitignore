@@ -22,9 +22,12 @@ nbproject
 *.sublime-project
 *.sublime-workspace
 
+# Node/NPM
+/node_modules
+
+# ApiGen
+/docs
+
 # Composer
 /vendor
 /composer.lock
-
-# Node/NPM
-/node_modules
