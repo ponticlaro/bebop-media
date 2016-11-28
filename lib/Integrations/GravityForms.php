@@ -3,6 +3,7 @@
 namespace Ponticlaro\Bebop\Media\Integrations;
 
 use Ponticlaro\Bebop\Media\Config;
+use Ponticlaro\Bebop\Media\Utils;
 
 class GravityForms {
 
@@ -41,7 +42,7 @@ class GravityForms {
     {
         $config          = Config::getInstance();
         $local_base_url  = $config->get('local.base_url');
-        $remote_base_url = $config->getMediaBaseUrl();
+        $remote_base_url = Utils::getMediaBaseUrl();
 
         foreach ($form['fields'] as $field) {
 
