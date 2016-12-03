@@ -1,7 +1,20 @@
 {
   "name": "ponticlaro/bebop-media",
-  "type": "wordpress-plugin",
   "description": "WordPress Plugin to manage media in the cloud",
+  "keywords": ["wordpress", "storage", "cloud"],
+  "type": "wordpress-plugin",
+  "license": [
+    "MIT",
+    "GPL-3.0+"
+  ],
+  "authors": [
+    {
+      "name": "Ponticlaro",
+      "email": "hello@ponticlaro.com",
+      "homepage": "http://www.ponticlaro.com",
+      "role": "Developer"
+    }
+  ],
   "repositories": [
     {
       "type": "vcs",
