@@ -111,6 +111,9 @@ class WordPressPlugin {
       // Manipulate media URLs
       add_filter('wp_get_attachment_url', array($this, '__handleAttachmentUrl'), 9, 2);
 
+      // Manipulate srcset URLs
+      add_filter('wp_calculate_image_srcset', array($this, '__handleAttachmentSrcsetUrls'), 9, 1);
+
       // Handle media update, including remote uploads
       add_filter('wp_update_attachment_metadata', array($this, '__updateAttachment'), 9, 2);
 
@@ -275,6 +278,26 @@ class WordPressPlugin {
     public function __handleAttachmentUrl($url, $post_id)
     {
         return (new Image($post_id))->getAbsoluteUrl();
+    }
+
+    /**
+     * Modifies URLs for attachment srcsets
+     * 
+     * @param  array $sources Raw srcset data
+     * @return array          Modified srcset data
+     */
+    public function __handleAttachmentSrcsetUrls($sources) 
+    {
+        $local_base_url  = Config::getInstance()->get('local.base_url');
+        $remote_base_url = Utils::getMediaBaseUrl();
+
+        foreach ($sources as $i => $src) {
+
+            if (isset($src['url']))
+                $sources[$i]['url'] = str_replace($local_base_url, $remote_base_url, $src['url']);
+        }
+
+        return $sources;
     }
 
     /**
