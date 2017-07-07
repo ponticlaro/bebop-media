@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 namespace Ponticlaro\Bebop\Media\Integrations;
 
@@ -9,9 +9,9 @@ class GravityForms {
 
     /**
      * Instantiates GravityForms integration
-     * 
+     *
      */
-    public function __construct() 
+    public function __construct()
     {
         add_action('gform_entry_post_save', [$this, '__modifyEntryArray'], 10, 2);
         add_action('gform_after_submission', [$this, '__uploadFilesToRemote'], 10, 2);
@@ -46,8 +46,26 @@ class GravityForms {
 
         foreach ($form['fields'] as $field) {
 
-            if ($field->type == 'fileupload' && isset($entry[$field->id]) && $entry[$field->id])
-                $entry[$field->id] = str_replace($local_base_url, $remote_base_url, $entry[$field->id]);
+            if ( $field->type == 'fileupload' &&
+                 isset($entry[$field->id]) &&
+                 $entry[$field->id] &&
+                 $urls = static::getUrlsFromStringArray($entry[$field->id]) ) {
+
+                 // Replace plain text array
+                 if (count($urls) > 1) {
+
+                   foreach ($urls as $index => $url) {
+                     $urls[$index] = str_replace($local_base_url, $remote_base_url, $url);
+                   }
+
+                   $entry[$field->id] = '["'. implode('","', $urls) .'"]';
+                 }
+
+                 // Replace single URL string
+                 else {
+                   $entry[$field->id] = str_replace($local_base_url, $remote_base_url, $urls[0]);
+                 }
+            }
         }
 
         return $entry;
@@ -59,7 +77,7 @@ class GravityForms {
      * @link   https://www.gravityhelp.com/documentation/article/gform_after_submission/ Gravity Forms hook documentation
      * @param  array $entry Gravity Forms entry
      * @param  array $form  Gravity Forms form
-     * @return void   
+     * @return void
      */
     public function __uploadFilesToRemote($entry, $form)
     {
@@ -67,8 +85,15 @@ class GravityForms {
 
         foreach ($form['fields'] as $field) {
 
-            if ($field->type == 'fileupload' && isset($entry[$field->id]) && $entry[$field->id])
-                do_action('po_bebop_media.push_file_to_remote', str_replace($remote_base_url, '', $entry[$field->id]));
+            if ( $field->type == 'fileupload' &&
+                 isset($entry[$field->id]) &&
+                 $entry[$field->id] &&
+                 $urls = static::getUrlsFromStringArray($entry[$field->id]) ) {
+
+                foreach ($urls as $url) {
+                  do_action('po_bebop_media.push_file_to_remote', str_replace($remote_base_url, '', $url));
+                }
+            }
         }
     }
 
@@ -88,15 +113,20 @@ class GravityForms {
         if ($field->type != 'fileupload')
             return $value;
 
-        $config          = Config::getInstance();
-        $local_base_url  = $config->get('local.base_url');
-        $remote_base_url = Utils::getMediaBaseUrl();
-        $file_url        = isset($entry[$field->id]) && $entry[$field->id] ? $entry[$field->id] : null;
-        
-        if ($file_url) {
+        if ( $urls = static::getUrlsFromStringArray($entry[$field->id])) {
 
-            $file_url = str_replace($local_base_url, $remote_base_url, $file_url);
-            $value    = preg_replace("/<a(.*)href='([^']*)'(.*)>/", '<a$1href="'. $file_url .'"$3>', $value);
+          $config          = Config::getInstance();
+          $local_base_url  = $config->get('local.base_url');
+          $remote_base_url = Utils::getMediaBaseUrl();
+
+          $value = '<ul>';
+
+          foreach ($urls as $url) {
+            $remote_url = str_replace($local_base_url, $remote_base_url, $url);
+            $value .= '<li><a href="'. $remote_url .'">'. basename($remote_url) .'</a></li>';
+          }
+
+          $value .= '</ul>';
         }
 
         return $value;
@@ -121,18 +151,49 @@ class GravityForms {
         foreach ($form['fields'] as $field) {
 
             // Delete remote file
-            if ($field->type == 'fileupload' && isset($entry[$field->id]) && $entry[$field->id])
-                do_action('po_bebop_media.delete_file_from_remote', str_replace($local_base_url, '', $entry[$field->id]));
+            if ( $field->type == 'fileupload' &&
+                 isset($entry[$field->id]) &&
+                 $entry[$field->id] &&
+                 $urls = static::getUrlsFromStringArray($entry[$field->id]) ) {
+
+                foreach ($urls as $url) {
+                  do_action('po_bebop_media.delete_file_from_remote', str_replace($local_base_url, '', $url));
+                }
+            }
         }
     }
 
     /**
      * Used to make sure files uploaded via gravity forms have unique names
-     * 
+     *
      * @param  string $filename Original file name
      * @return string           Filename with timestamp
      */
-    function __makeFilenameUnique($filename) {
+    function __makeFilenameUnique($filename)
+    {
         return date('U') .'-'. $filename;
+    }
+
+    /**
+     * Gets upload URLs from plain text array
+     *
+     * @param  string string Array in plain text
+     * @return array         List of URLs
+     */
+    protected static function getUrlsFromStringArray($string)
+    {
+      // Remove backslashes
+      $string = str_replace('\/', '/', $string);
+
+      // Remove square brackets on both ends
+      $string = rtrim(ltrim($string, '['), ']');
+
+      // Remove double quotes on both ends
+      $string = trim($string, '"');
+
+      // Split string into URLs
+      $urls = explode('","', $string);
+
+      return $urls && $urls[0] != '' ? $urls : [];
     }
 }
