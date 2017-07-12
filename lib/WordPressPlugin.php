@@ -16,7 +16,7 @@ class WordPressPlugin {
 
     /**
      * Lists of available plugin integrations
-     * 
+     *
      * @var array
      */
     protected static $plugin_integrations = [
@@ -29,7 +29,7 @@ class WordPressPlugin {
 
     /**
      * Lists of enabled plugin integrations
-     * 
+     *
      * @var array
      */
     protected $enabled_plugin_integrations = [];
@@ -112,7 +112,7 @@ class WordPressPlugin {
       add_filter('wp_get_attachment_url', array($this, '__handleAttachmentUrl'), 9, 2);
 
       // Manipulate srcset URLs
-      add_filter('wp_calculate_image_srcset', array($this, '__handleAttachmentSrcsetUrls'), 9, 1);
+      add_filter('wp_calculate_image_srcset', array($this, '__handleSrcsetUrls'), 9, 1);
 
       // Handle media update, including remote uploads
       add_filter('wp_update_attachment_metadata', array($this, '__updateAttachment'), 9, 2);
@@ -128,7 +128,7 @@ class WordPressPlugin {
 
       // Handle deleting remote files
       add_action('po_bebop_media.delete_file_from_remote', array($this, '__deleteFileFromRemoteHook'), 1, 1);
-    
+
       // Enable integrations with other WordPress plugins
       add_action('init', array($this, '__enablePluginIntegrations'));
     }
@@ -177,7 +177,7 @@ class WordPressPlugin {
      * @return array                    Modified response
      */
     public function __modifyAttachmentJson($response, $attachment, $meta)
-    {   
+    {
         $file_type = get_post_mime_type($attachment->ID);
 
         // If the file is a image
@@ -281,23 +281,52 @@ class WordPressPlugin {
     }
 
     /**
-     * Modifies URLs for attachment srcsets
-     * 
-     * @param  array $sources Raw srcset data
-     * @return array          Modified srcset data
+     * Modifies data for srcset HTML attribute,
+     * replacing local URLs with remote ones
+     *
+     * @since  1.0.5
+     * @see https://developer.wordpress.org/reference/hooks/wp_calculate_image_srcset/
+     *
+     * @param  array  sources  List of URLs to build the srcset HTML attribute
+     * @return array           Modified $sources now containing remote URLs
      */
-    public function __handleAttachmentSrcsetUrls($sources) 
+    public function __handleSrcsetUrls(array $sources)
     {
-        $local_base_url  = Config::getInstance()->get('local.base_url');
-        $remote_base_url = Utils::getMediaBaseUrl();
+      // Parse local base URL
+      $config = Config::getInstance();
+      $local_parsed = parse_url($config->get('local.base_url'));
 
-        foreach ($sources as $i => $src) {
+      // Parse remote base URL
+      $remote_base_url = Utils::getMediaBaseUrl();
+      $remote_parsed = parse_url($remote_base_url);
 
-            if (isset($src['url']))
-                $sources[$i]['url'] = str_replace($local_base_url, $remote_base_url, $src['url']);
-        }
+      // Loop through sources
+      foreach ($sources as $i => $source) {
 
-        return $sources;
+        // Parse source URL
+        $url_parsed = parse_url($source['url']);
+
+        // Build URL
+        $url  = $remote_parsed['scheme'] .'://';
+        $url .= $remote_parsed['host'];
+
+        if ($remote_parsed['port'])
+          $url .= ':'. $remote_parsed['port'];
+
+        $url .= $remote_parsed['path'];
+        $url .= str_replace($local_parsed['path'], '', $url_parsed['path']);
+
+        if ($url_parsed['query'])
+          $url .= '?'. $url_parsed['query'];
+
+        if ($url_parsed['fragment'])
+          $url .= '#'. $url_parsed['fragment'];
+
+        $source['url'] = $url;
+        $sources[$i]   = $source;
+      }
+
+      return $sources;
     }
 
     /**
@@ -325,9 +354,9 @@ class WordPressPlugin {
                 $file_type = get_post_mime_type($post_id);
 
                 // If the file is a video, try to use the AWS Elastic Transcoder
-                if (class_exists('ponticlaro\encoding\Encoder') && 
+                if (class_exists('ponticlaro\encoding\Encoder') &&
                     strpos($file_type, 'video') !== false &&
-                    $config->get('elastic_transcoder.enabled') !== '' && 
+                    $config->get('elastic_transcoder.enabled') !== '' &&
                     is_readable(TEMPLATEPATH .'/'. trim($config->get('elastic_transcoder.config_file'), '/'))) {
 
                     $encoder       = new \ponticlaro\encoding\Encoder(require TEMPLATEPATH .'/'. trim($config->get('elastic_transcoder.config_file'), '/'));
@@ -449,13 +478,13 @@ class WordPressPlugin {
 
     /**
      * Enables integrations with other WordPress plugins
-     * 
+     *
      * @return void
      */
     public function __enablePluginIntegrations()
     {
         foreach (static::$plugin_integrations as $id => $plugin) {
-            
+
             $this->enabled_plugin_integrations[$id] = call_user_func_array([new \ReflectionClass($plugin['class']), 'newInstance'], []);
         }
     }
