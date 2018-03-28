@@ -4,6 +4,7 @@ namespace Ponticlaro\Bebop\Media;
 
 use Ponticlaro\Bebop\ScriptsLoader\Css;
 use Ponticlaro\Bebop\ScriptsLoader\Js;
+use Ponticlaro\Bebop\Media\Utils;
 
 class WordPressPlugin {
 
@@ -110,6 +111,9 @@ class WordPressPlugin {
 
       // Manipulate media URLs
       add_filter('wp_get_attachment_url', array($this, '__handleAttachmentUrl'), 9, 2);
+
+      // Manipulate media URLs for the different image sizes
+      add_filter('wp_get_attachment_metadata', array($this, '__handleAttachmentMetadata'), 9, 2);  
 
       // Manipulate srcset URLs
       add_filter('wp_calculate_image_srcset', array($this, '__handleSrcsetUrls'), 9, 1);
@@ -271,13 +275,47 @@ class WordPressPlugin {
     /**
      * Modifies URLs for all attachments depending on configuration
      *
-     * @param  string $url     Absolute URL for the local file
-     * @param  int    $post_id ID of the attachment in the database
-     * @return string          Modified URL
+     * @param  string $url Absolute URL for the local file
+     * @param  int    $id  ID of the attachment
+     * @return string      Modified URL
      */
-    public function __handleAttachmentUrl($url, $post_id)
+    public function __handleAttachmentUrl($url, $id)
     {
-        return (new Image($post_id))->getAbsoluteUrl();
+        return (new Image($id))->getAbsoluteUrl();
+    }
+
+    /**
+     * Modifies URLs for all attachments depending on configuration
+     *
+     * @since 1.0.6
+     * 
+     * @param  string|array $data Attachment metadata
+     * @param  int          $id  ID of the attachment
+     * @return array        Modified metadata
+     */
+    public function __handleAttachmentMetadata( $data, $id ) 
+    {
+        if ( ! $data || is_string( $data ) )
+            return $data;
+
+        $config = Config::getInstance();
+        $image  = new Image($id);
+
+        // Adds Google Cloud Storage signed URL string if needed
+        if ( 'private' == $config->get('storage.visibility') && 
+             'gcs' == $config->get('storage.provider') ) {
+            
+            if ( is_array( $data['sizes'] ) ) {
+                foreach ( $data['sizes'] as $size => $size_data ) {
+
+                    $signed_url             = $image->getAbsoluteUrl( $size );
+                    $size_data['file']      = $size_data['file'] .'?'. parse_url( $signed_url, PHP_URL_QUERY );
+                    $data['sizes'][ $size ] = $size_data;
+                }  
+            } 
+        }
+
+        return $data;
     }
 
     /**

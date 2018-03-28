@@ -88,5 +88,38 @@ class Utils {
 		  return $key;
 
 		return str_replace('+', '%2B', $key);
-	}
+  }
+  
+  /**
+   * Returns Google Cloud Storage signed URL string
+   * 
+   * @param string $path Path of file within Google Cloud Storage
+   * @return string
+   */
+  public function getGCSSignedUrlString( $path ) 
+  {
+    $config     = Config::getInstance();
+    $project_id = $config->get('storage.gcs.project_id');
+    $auth_json  = $config->get('storage.gcs.auth_json');
+    $bucket     = $config->get('storage.gcs.bucket');
+    $prefix     = $config->get('storage.gcs.prefix');
+    $expires    = $config->get('storage.gcs.signed_url_expiration');
+    
+    // Fallback to 24 hours expiration
+    if ( ! is_integer( $expires ) )
+      $expires = 86400;
+
+    // Init Google Cloud Storage client
+    $storage = new \Google\Cloud\Storage\StorageClient([
+      'projectId' => $project_id,
+      'keyFile'   => json_decode($auth_json, true)
+    ]);
+
+    // Get signed URL
+    $bucket = $storage->bucket( $bucket );
+    $object = $bucket->object( trim( $path, '/') );
+    $url    = $object->signedUrl( time() + $expires );
+
+    return $url ? parse_url($url, PHP_URL_QUERY) : '';
+  }
 }

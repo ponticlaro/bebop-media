@@ -15,12 +15,6 @@
       "role": "Developer"
     }
   ],
-  "repositories": [
-    {
-      "type": "vcs",
-      "url": "git@github.com:ponticlaro/ponticlaro-aws.git"
-    }
-  ],
   "require": {
     "ext-gd": "*",
     "composer/installers": "~1.0",
@@ -33,7 +27,7 @@
     "slim/slim": "~2",
     "league/flysystem": "~1",
     "league/flysystem-aws-s3-v3": "^1",
-    "superbalist/flysystem-google-storage": "^3",
+    "superbalist/flysystem-google-storage": "^7",
     "symfony/dom-crawler": "^2.7",
     "symfony/css-selector": "^2.7"
   },
@@ -44,9 +38,6 @@
     "psr-4": {
       "Ponticlaro\\Bebop\\Media\\": "lib/"
     }
-  },
-  "suggest": {
-    "ponticlaro/aws-transcoder": "Allows usage of AWS Elastic Transcoder to optimize video uploads"
   },
   "scripts": {
     "generate-docs": "apigen generate --config ./.apigen.yaml"

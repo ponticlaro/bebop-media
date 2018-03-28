@@ -2,6 +2,9 @@
 
 namespace Ponticlaro\Bebop\Media;
 
+use Ponticlaro\Bebop\Media\Config;
+use Ponticlaro\Bebop\Media\Utils;
+
 class Image {
 
   /**
@@ -140,7 +143,7 @@ class Image {
     if ($size) {
 
       if ($this->sizePresetIsDefined($size) && $this->sizeExists($size)) {
-        $url = dirname($path) .'/'. $this->wordpress_meta['sizes'][$size]['file'];
+        $url = dirname($path) . $this->wordpress_meta['sizes'][$size]['file'];
       }
 
       else {
@@ -178,6 +181,13 @@ class Image {
 
     if ('aws_s3' == $config->get('storage.provider'))
       $url = Utils::getCleanAWSS3Key($url);
+
+    // Adds Google Cloud Storage signed URL string if needed
+    if ( 'private' == $config->get('storage.visibility') && 
+         'gcs' == $config->get('storage.provider') ) {
+
+      $url = rtrim( $url, '?') .'?'. Utils::getGCSSignedUrlString(parse_url( $url, PHP_URL_PATH ));
+    }
 
     return $url;
   }

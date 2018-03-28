@@ -75,14 +75,19 @@ class Filesystem {
    */
   protected function __getAWSS3Filesystem()
   {
-    $config = Config::getInstance();
-    $scheme = $config->get('url_scheme');
-    $key    = $config->get('storage.s3.key');
-    $secret = $config->get('storage.s3.secret');
-    $region = $config->get('storage.s3.region');
-    $bucket = $config->get('storage.s3.bucket');
-    $prefix = $config->get('storage.s3.prefix');
-    
+    $config     = Config::getInstance();
+    $scheme     = $config->get('url_scheme');
+    $key        = $config->get('storage.s3.key');
+    $secret     = $config->get('storage.s3.secret');
+    $region     = $config->get('storage.s3.region');
+    $bucket     = $config->get('storage.s3.bucket');
+    $prefix     = $config->get('storage.s3.prefix');
+    $visibility = $config->get('storage.visibility');
+
+    // Making sure visibility is valid and fallsback to 'public'
+    if ( ! in_array( $visibility, CONFIG::ALLOWED_UPLOAD_VISIBILITIES) )
+      $visibility = 'public';
+
     if (!$scheme || !$key || !$secret || !$region || !$bucket)
       return null;
 
@@ -102,7 +107,7 @@ class Filesystem {
 
     // Return AWS S3 filesystem
     return new FlyFilesystem($adapter, [
-      'visibility' => AdapterInterface::VISIBILITY_PUBLIC
+      'visibility' => 'public' == $visibility ? AdapterInterface::VISIBILITY_PUBLIC : AdapterInterface::VISIBILITY_PRIVATE
     ]);
   }
 
@@ -118,6 +123,11 @@ class Filesystem {
     $auth_json   = $config->get('storage.gcs.auth_json');
     $bucket_name = $config->get('storage.gcs.bucket');
     $prefix      = $config->get('storage.gcs.prefix');
+    $visibility  = $config->get('storage.visibility');
+
+    // Making sure visibility is valid and fallsback to 'public'
+    if ( ! in_array( $visibility, CONFIG::ALLOWED_UPLOAD_VISIBILITIES) )
+      $visibility = 'public';
 
     if (!$project_id || !$auth_json || !$bucket_name)
       return null;
@@ -136,7 +146,7 @@ class Filesystem {
 
     // Return Google Cloud Storage filesystem
     return new FlyFilesystem($adapter, [
-      'visibility' => AdapterInterface::VISIBILITY_PUBLIC
+      'visibility' => 'public' == $visibility ? AdapterInterface::VISIBILITY_PUBLIC : AdapterInterface::VISIBILITY_PRIVATE
     ]);
   }
 

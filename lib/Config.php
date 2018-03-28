@@ -62,6 +62,13 @@ class Config {
   const HTTP_API_BASE_URL = '_bebop-media/api/';
 
   /**
+   * Allowed visibilities for remote filesystems
+   */
+  const ALLOWED_UPLOAD_VISIBILITIES = [
+    'public', 'private'
+  ];
+
+  /**
    * This class instance
    *
    * @var Ponticlaro\Bebop\Media\Config
@@ -81,7 +88,8 @@ class Config {
     'url_scheme'      => 'PO_BEBOP_MEDIA__URL_SCHEME',
 
     // Storage
-    'storage.provider' => 'PO_BEBOP_MEDIA__STORAGE_PROVIDER',
+    'storage.provider'   => 'PO_BEBOP_MEDIA__STORAGE_PROVIDER',
+    'storage.visibility' => 'PO_BEBOP_MEDIA__STORAGE_VISIBILITY',
 
     // Storage: AWS S3
     'storage.s3.key'    => 'PO_BEBOP_MEDIA__STORAGE_S3_KEY',
@@ -91,10 +99,11 @@ class Config {
     'storage.s3.prefix' => 'PO_BEBOP_MEDIA__STORAGE_S3_PREFIX',
 
     // Storage: Google Cloud Storage
-    'storage.gcs.project_id' => 'PO_BEBOP_MEDIA__STORAGE_GCS_PROJECT_ID',
-    'storage.gcs.bucket'     => 'PO_BEBOP_MEDIA__STORAGE_GCS_BUCKET',
-    'storage.gcs.prefix'     => 'PO_BEBOP_MEDIA__STORAGE_GCS_PREFIX',
-    'storage.gcs.auth_json'  => 'PO_BEBOP_MEDIA__STORAGE_GCS_AUTH_JSON',
+    'storage.gcs.project_id'             => 'PO_BEBOP_MEDIA__STORAGE_GCS_PROJECT_ID',
+    'storage.gcs.bucket'                 => 'PO_BEBOP_MEDIA__STORAGE_GCS_BUCKET',
+    'storage.gcs.prefix'                 => 'PO_BEBOP_MEDIA__STORAGE_GCS_PREFIX',
+    'storage.gcs.auth_json'              => 'PO_BEBOP_MEDIA__STORAGE_GCS_AUTH_JSON',
+    'storage.gcs.signed_url_expiration'  => 'PO_BEBOP_MEDIA__STORAGE_GCS_SIGNED_URL_EXPIRATION',
 
     // CDN
     'cdn.enabled' => 'PO_BEBOP_MEDIA__CDN_ENABLED',

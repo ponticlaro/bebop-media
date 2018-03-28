@@ -31,4 +31,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 if (!defined('ABSPATH'))
 	die('File must not be called directly');
 
+include_once __DIR__. '/vendor/autoload.php';
+
 Ponticlaro\Bebop\Media\WordPressPlugin::boot(__FILE__);
