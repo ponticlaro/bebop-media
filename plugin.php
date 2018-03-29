@@ -4,7 +4,7 @@
 Plugin Name: Ponticlaro Media
 Plugin URI:
 Description: WordPress Plugin to manage media in the cloud
-Version: 1.0.0
+Version: 1.0.6
 Author: Ponticlaro
 Author URI: http://ponticlaro.com
 Author Email: hello@ponticlaro.com
@@ -30,7 +30,5 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 if (!defined('ABSPATH'))
 	die('File must not be called directly');
-
-include_once __DIR__. '/vendor/autoload.php';
 
 Ponticlaro\Bebop\Media\WordPressPlugin::boot(__FILE__);

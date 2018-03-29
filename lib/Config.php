@@ -69,6 +69,11 @@ class Config {
   ];
 
   /**
+   * Sets default expiration time for GCP signed URLs to 30 minutes
+   */
+  const GCS_SIGNED_URL_EXPIRATION = 3600;
+
+  /**
    * This class instance
    *
    * @var Ponticlaro\Bebop\Media\Config

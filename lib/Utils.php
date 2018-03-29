@@ -96,18 +96,27 @@ class Utils {
    * @param string $path Path of file within Google Cloud Storage
    * @return string
    */
-  public function getGCSSignedUrlString( $path ) 
+  public static function getGCSSignedUrlString( $path ) 
   {
-    $config     = Config::getInstance();
+    $config = Config::getInstance();
+    $prefix = $config->get('storage.gcs.prefix');
+    
+    // Get cached signed string
+    $clean_path           = trim( $path, '/');
+    $cached_signed_string = get_transient( 'bebop_media_'. str_replace( $prefix, '', $clean_path ) );
+
+    // Return cached signed string if we have one
+    if ( $cached_signed_string )
+      return $cached_signed_string; 
+    
     $project_id = $config->get('storage.gcs.project_id');
     $auth_json  = $config->get('storage.gcs.auth_json');
     $bucket     = $config->get('storage.gcs.bucket');
-    $prefix     = $config->get('storage.gcs.prefix');
-    $expires    = $config->get('storage.gcs.signed_url_expiration');
-    
+    $expires_in = $config->get('storage.gcs.signed_url_expiration');
+
     // Fallback to 24 hours expiration
-    if ( ! is_integer( $expires ) )
-      $expires = 86400;
+    if ( ! is_integer( $expires_in ) )
+      $expires_in = Config::GCS_SIGNED_URL_EXPIRATION;
 
     // Init Google Cloud Storage client
     $storage = new \Google\Cloud\Storage\StorageClient([
@@ -116,10 +125,17 @@ class Utils {
     ]);
 
     // Get signed URL
-    $bucket = $storage->bucket( $bucket );
-    $object = $bucket->object( trim( $path, '/') );
-    $url    = $object->signedUrl( time() + $expires );
+    $expiration    = time() + $expires_in;
+    $bucket        = $storage->bucket( $bucket );
+    $object        = $bucket->object( $clean_path );
+    $url           = $object->signedUrl( $expiration );
+    $signed_string = $url ? parse_url( $url, PHP_URL_QUERY ) : '';
 
-    return $url ? parse_url($url, PHP_URL_QUERY) : '';
+    // Cache signed string
+    if ( $signed_string ) {
+      set_transient( 'bebop_media_'. str_replace( $prefix, '', $clean_path ), $signed_string, $expires_in );
+    }
+
+    return $signed_string;
   }
 }
