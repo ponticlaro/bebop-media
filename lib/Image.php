@@ -61,9 +61,6 @@ class Image {
     // Check if attachment have a file path to use
     $this->partial_path = get_post_meta($id, '_wp_attached_file', true);
 
-    if (!$this->partial_path)
-      throw new \Exception("Target post does not have a file path to be used");
-
     // Collect environment information if not already available
     if (is_null(static::$env))
       static::$env = static::__getEnvInfo();
