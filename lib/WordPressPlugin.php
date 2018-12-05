@@ -338,30 +338,35 @@ class WordPressPlugin {
       $remote_base_url = Utils::getMediaBaseUrl();
       $remote_parsed = parse_url($remote_base_url);
 
-      // Loop through sources
-      foreach ($sources as $i => $source) {
 
-        // Parse source URL
-        $url_parsed = parse_url($source['url']);
+      if (count($remote_parsed) > 0){
+        return;
+      } else {
+        // Loop through sources
+        foreach ($sources as $i => $source) {
 
-        // Build URL
-        $url  = $remote_parsed['scheme'] .'://';
-        $url .= $remote_parsed['host'];
+            // Parse source URL
+            $url_parsed = parse_url($source['url']);
 
-        if ($remote_parsed['port'])
-          $url .= ':'. $remote_parsed['port'];
+            // Build URL
+            $url  = $remote_parsed['scheme'] .'://';
+            $url .= $remote_parsed['host'];
 
-        $url .= $remote_parsed['path'];
-        $url .= str_replace($local_parsed['path'], '', $url_parsed['path']);
+            if ($remote_parsed['port'])
+            $url .= ':'. $remote_parsed['port'];
 
-        if ($url_parsed['query'])
-          $url .= '?'. $url_parsed['query'];
+            $url .= $remote_parsed['path'];
+            $url .= str_replace($local_parsed['path'], '', $url_parsed['path']);
 
-        if ($url_parsed['fragment'])
-          $url .= '#'. $url_parsed['fragment'];
+            if ($url_parsed['query'])
+            $url .= '?'. $url_parsed['query'];
 
-        $source['url'] = $url;
-        $sources[$i]   = $source;
+            if ($url_parsed['fragment'])
+            $url .= '#'. $url_parsed['fragment'];
+
+            $source['url'] = $url;
+            $sources[$i]   = $source;
+        }
       }
 
       return $sources;
