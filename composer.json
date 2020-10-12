@@ -24,7 +24,7 @@
     "ponticlaro/bebop-http-api": "^1",
     "ponticlaro/bebop-scripts-loader": "^1",
     "respect/validation": "~0.9",
-    "slim/slim": "~2",
+    "slim/slim": "^2",
     "league/flysystem": "^1",
     "league/flysystem-aws-s3-v3": "^1",
     "superbalist/flysystem-google-storage": "^7",
